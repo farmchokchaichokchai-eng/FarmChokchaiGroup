@@ -471,8 +471,23 @@ header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-inde
   </div>
 </div>
 <div id="quota-modal" class="modal-overlay hidden">
-  <div class="modal" style="max-width:500px"><h3>จัดการวันลา</h3><p id="quota-modal-name" style="font-size:13px;color:#777;margin-bottom:16px"></p>
-    <div id="quota-fields" style="display:flex;flex-direction:column;gap:10px"></div>
+  <div class="modal" style="max-width:520px"><h3>จัดการวันลา</h3><p id="quota-modal-name" style="font-size:13px;color:#777;margin-bottom:16px"></p>
+    <div class="tabs" style="margin-bottom:18px">
+      <button class="tab-btn active" id="qm-tab-btn-quota" onclick="switchQuotaTab('quota')">🗓️ โควต้าวันลา</button>
+      <button class="tab-btn" id="qm-tab-btn-comp" onclick="switchQuotaTab('comp')">🎁 สิทธิ์วันหยุดลาชดเชย</button>
+    </div>
+    <div id="qm-panel-quota">
+      <div id="quota-fields" style="display:flex;flex-direction:column;gap:10px"></div>
+    </div>
+    <div id="qm-panel-comp" class="hidden">
+      <div style="display:flex;gap:8px;align-items:flex-start;background:#fefce8;border:1px solid #fde68a;color:#92400e;border-radius:10px;padding:10px 12px;font-size:12px;margin-bottom:14px"><span>⚠️</span><span>กำหนดว่าพนักงานคนนี้สามารถใช้วันหยุดอะไรได้บ้างในการลาชดเชย</span></div>
+      <label style="display:flex;align-items:center;gap:8px;margin-bottom:12px;cursor:pointer;font-size:13px;font-weight:600"><input type="checkbox" id="comp-unlimited" onchange="toggleCompUnlimited()" style="width:16px;height:16px"> อนุญาตทุกวันหยุด (ไม่จำกัด)</label>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button type="button" id="comp-select-all" onclick="selectAllCompHolidays(true)" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid #bbf7d0;background:#f0fdf4;color:#166534;font-size:12px;font-weight:600;cursor:pointer">เลือกทั้งหมด</button>
+        <button type="button" id="comp-deselect-all" onclick="selectAllCompHolidays(false)" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid #fecaca;background:#fef2f2;color:#991b1b;font-size:12px;font-weight:600;cursor:pointer">ยกเลิกทั้งหมด</button>
+      </div>
+      <div id="comp-holiday-fields" style="display:flex;flex-direction:column;gap:16px;max-height:320px;overflow-y:auto;padding-right:4px"></div>
+    </div>
     <div class="modal-actions"><button class="btn-cancel" onclick="closeModal('quota-modal')">ยกเลิก</button><button class="btn-confirm" onclick="saveQuota()">บันทึก</button></div>
   </div>
 </div>
@@ -639,7 +654,8 @@ function buildHolidayDropdown(year,selId,uid){
   var uid2=uid||(currentUser?currentUser._key:null);
   var used=uid2?getUsedCompDates(uid2):new Set();
   var allowed=uid2?(allowedHolidaysData[uid2]||null):null;
-  list.forEach(function(h){var p=h.date.split("-"),opt=document.createElement("option");opt.value=h.date+"|"+h.day+"|"+h.name;var lbl=h.name+" — "+h.day+" "+parseInt(p[2])+" "+MONTHS[parseInt(p[1])]+" "+year;var isOk=(allowed===null)||!!(allowed&&allowed[h.date]);var isUsed=used.has(h.date);if(isUsed){opt.disabled=true;opt.textContent="✓ ใช้แล้ว — "+lbl;opt.style.color="#bbb";}else if(!isOk){opt.disabled=true;opt.textContent="🔒 ไม่ได้รับสิทธิ์ — "+lbl;opt.style.color="#bbb";}else opt.textContent=lbl;newSel.appendChild(opt);});
+  var unlimited=!allowed||allowed._unlimited===true;
+  list.forEach(function(h){var p=h.date.split("-"),opt=document.createElement("option");opt.value=h.date+"|"+h.day+"|"+h.name;var lbl=h.name+" — "+h.day+" "+parseInt(p[2])+" "+MONTHS[parseInt(p[1])]+" "+year;var isOk=unlimited||!!(allowed&&allowed[h.date]);var isUsed=used.has(h.date);if(isUsed){opt.disabled=true;opt.textContent="✓ ใช้แล้ว — "+lbl;opt.style.color="#bbb";}else if(!isOk){opt.disabled=true;opt.textContent="🔒 ไม่ได้รับสิทธิ์ — "+lbl;opt.style.color="#bbb";}else opt.textContent=lbl;newSel.appendChild(opt);});
   oldSel.parentNode.replaceChild(newSel,oldSel);
 }
 
@@ -1019,8 +1035,46 @@ function openDelModal(key,name){delTargetId=key;$("del-emp-name").textContent=na
 async function confirmDelete(){if(!delTargetId)return;await refUser(delTargetId).remove();closeModal("del-modal");delTargetId=null;}
 
 /* ── Quota ── */
-function openQuotaModal(key){quotaEditId=key;var u=usersData[key];if(!u)return;$("quota-modal-name").textContent="👤 "+u.name+" · "+(u.position||"");$("quota-fields").innerHTML=TYPES.map(function(t){var qv=getUserQuota(key)[t.id]||{used:0,total:0};return "<div style='display:grid;grid-template-columns:1fr 100px 100px;align-items:center;gap:10px;padding:10px 12px;background:#fafafa;border-radius:10px;border:1px solid #eee'><div style='display:flex;align-items:center;gap:8px'><span>"+t.icon+"</span><span style='font-size:13px'>"+t.label+"</span></div><div><label style='font-size:10px;color:#999;display:block;margin-bottom:3px'>ใช้ไปแล้ว</label><input type='number' id='q-used-"+t.id+"' value='"+qv.used+"' min='0' class='field-input' style='padding:6px;font-size:13px;text-align:center'></div><div><label style='font-size:10px;color:#999;display:block;margin-bottom:3px'>โควต้ารวม</label><input type='number' id='q-total-"+t.id+"' value='"+qv.total+"' min='0' class='field-input' style='padding:6px;font-size:13px;text-align:center'></div></div>";}).join("");show("quota-modal");}
-async function saveQuota(){if(!quotaEditId)return;var upd={};TYPES.forEach(function(t){upd[t.id]={used:parseInt(($("q-used-"+t.id)||{value:"0"}).value)||0,total:parseInt(($("q-total-"+t.id)||{value:"0"}).value)||0};});await refQuota().child(quotaEditId).set(upd);closeModal("quota-modal");}
+function switchQuotaTab(tab){
+  $("qm-panel-quota").classList.toggle("hidden",tab!=="quota");
+  $("qm-panel-comp").classList.toggle("hidden",tab!=="comp");
+  $("qm-tab-btn-quota").classList.toggle("active",tab==="quota");
+  $("qm-tab-btn-comp").classList.toggle("active",tab==="comp");
+}
+function openQuotaModal(key){quotaEditId=key;var u=usersData[key];if(!u)return;switchQuotaTab("quota");$("quota-modal-name").textContent="👤 "+u.name+" · "+(u.position||"");$("quota-fields").innerHTML=TYPES.map(function(t){var qv=getUserQuota(key)[t.id]||{used:0,total:0};return "<div style='display:grid;grid-template-columns:1fr 100px 100px;align-items:center;gap:10px;padding:10px 12px;background:#fafafa;border-radius:10px;border:1px solid #eee'><div style='display:flex;align-items:center;gap:8px'><span>"+t.icon+"</span><span style='font-size:13px'>"+t.label+"</span></div><div><label style='font-size:10px;color:#999;display:block;margin-bottom:3px'>ใช้ไปแล้ว</label><input type='number' id='q-used-"+t.id+"' value='"+qv.used+"' min='0' class='field-input' style='padding:6px;font-size:13px;text-align:center'></div><div><label style='font-size:10px;color:#999;display:block;margin-bottom:3px'>โควต้ารวม</label><input type='number' id='q-total-"+t.id+"' value='"+qv.total+"' min='0' class='field-input' style='padding:6px;font-size:13px;text-align:center'></div></div>";}).join("");renderCompHolidayFields(key);show("quota-modal");}
+function renderCompHolidayFields(key){
+  var saved=allowedHolidaysData[key]||null;
+  var unlimited=!saved||saved._unlimited===true;
+  $("comp-unlimited").checked=unlimited;
+  function block(year,list){
+    var rows=list.map(function(h){
+      var p=h.date.split("-"),lbl=h.day+" "+parseInt(p[2])+" "+MONTHS[parseInt(p[1])]+" "+year+" — "+h.name;
+      var checked=unlimited||!!(saved&&saved[h.date]);
+      return "<label data-cdate='"+h.date+"' onchange=\"styleCompRow(this)\" style='display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;border:1px solid "+(checked?"#bbf7d0":"#eee")+";background:"+(checked?"#f0fdf4":"#fff")+";cursor:pointer'><input type='checkbox' class='comp-holiday-cb' data-date='"+h.date+"'"+(checked?" checked":"")+(unlimited?" disabled":"")+" style='width:16px;height:16px;flex-shrink:0'><span style='font-size:12.5px'>"+lbl+"</span></label>";
+    }).join("");
+    return "<div><div style='font-size:12px;font-weight:600;color:#888;margin-bottom:6px'>ปี "+year+"</div><div style='display:flex;flex-direction:column;gap:6px'>"+rows+"</div></div>";
+  }
+  $("comp-holiday-fields").innerHTML=block(2568,H2568)+block(2569,H2569);
+  $("comp-select-all").disabled=unlimited;$("comp-deselect-all").disabled=unlimited;
+  $("comp-select-all").style.opacity=unlimited?"0.5":"1";$("comp-deselect-all").style.opacity=unlimited?"0.5":"1";
+}
+function styleCompRow(label){var cb=label.querySelector("input");label.style.borderColor=cb.checked?"#bbf7d0":"#eee";label.style.background=cb.checked?"#f0fdf4":"#fff";}
+function toggleCompUnlimited(){
+  var unlimited=$("comp-unlimited").checked;
+  document.querySelectorAll(".comp-holiday-cb").forEach(function(cb){cb.disabled=unlimited;if(unlimited)cb.checked=true;styleCompRow(cb.parentNode);});
+  $("comp-select-all").disabled=unlimited;$("comp-deselect-all").disabled=unlimited;
+  $("comp-select-all").style.opacity=unlimited?"0.5":"1";$("comp-deselect-all").style.opacity=unlimited?"0.5":"1";
+}
+function selectAllCompHolidays(val){document.querySelectorAll(".comp-holiday-cb").forEach(function(cb){cb.checked=val;styleCompRow(cb.parentNode);});}
+async function saveQuota(){
+  if(!quotaEditId)return;
+  var upd={};TYPES.forEach(function(t){upd[t.id]={used:parseInt(($("q-used-"+t.id)||{value:"0"}).value)||0,total:parseInt(($("q-total-"+t.id)||{value:"0"}).value)||0};});
+  await refQuota().child(quotaEditId).set(upd);
+  var unlimited=$("comp-unlimited").checked,compData={_unlimited:unlimited};
+  if(!unlimited){document.querySelectorAll(".comp-holiday-cb").forEach(function(cb){if(cb.checked)compData[cb.dataset.date]=true;});}
+  await db.ref(bPath("allowedHolidays")).child(quotaEditId).set(compData);
+  closeModal("quota-modal");
+}
 
 /* ── Sync quota ── */
 async function syncQuotaDefaults(){if(!confirm("อัปเดตโควต้าวันลาให้พนักงานทุกคนตามเงื่อนไขใหม่?"))return;var uSnap=await refUsers().once("value"),uAll=uSnap.val()||{},qSnap=await refQuota().once("value"),qAll=qSnap.val()||{},upd={};Object.entries(uAll).forEach(function(e){var k=e[0],u=e[1];if(!canLeave(u.role))return;var cur=qAll[k]||{},merged={};Object.keys(DEFAULT_QUOTA).forEach(function(type){var def=DEFAULT_QUOTA[type],saved=cur[type]||{};merged[type]={used:saved.used||0,total:(saved.total&&saved.total>=def.total)?saved.total:def.total};});upd[k]=merged;});if(Object.keys(upd).length){await refQuota().update(upd);alert("✅ อัปเดตโควต้าเรียบร้อย "+Object.keys(upd).length+" คน");}}
