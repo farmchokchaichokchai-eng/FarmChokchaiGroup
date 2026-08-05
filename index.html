@@ -493,7 +493,7 @@ header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-inde
 </div>
 <div id="approver-modal" class="modal-overlay hidden">
   <div class="modal" style="max-width:440px"><h3>👥 กำหนดผู้อนุมัติ</h3><p id="approver-modal-name" style="font-size:13px;color:#777;margin-bottom:16px"></p>
-    <p style="font-size:11.5px;color:#999;margin-bottom:14px">ถ้าไม่เลือก ระบบจะใช้ค่าเริ่มต้นคือ "หัวหน้างาน/ผู้จัดการในฝ่ายเดียวกัน" ตามปกติ</p>
+    <p style="font-size:11.5px;color:#999;margin-bottom:14px">ถ้าไม่เลือก ระบบจะใช้ค่าเริ่มต้นคือ "หัวหน้างาน/ผู้จัดการในฝ่ายเดียวกัน" ตามปกติ (ถ้าฝ่ายนี้ไม่มีหัวหน้างานเลย ระบบจะข้ามขั้นตอนเห็นชอบให้อัตโนมัติ) หรือเลือก "🚫 ข้าม" เพื่อบังคับไม่ต้องมีผู้เห็นชอบ</p>
     <div style="display:flex;flex-direction:column;gap:14px">
       <div><label class="field-label">ผู้เห็นชอบ (หัวหน้างาน)</label><select id="appr-sup" class="field-input"></select></div>
       <div><label class="field-label">ผู้อนุมัติขั้นสุดท้าย (ผู้จัดการขึ้นไป)</label><select id="appr-mgr" class="field-input"></select></div>
@@ -906,8 +906,9 @@ function renderSupApprove(){
   var dept=currentUser.dept;
   var all=getHistory().filter(function(h){
     if(getRoleLevel(h.userRole||"employee")!==1)return false;
-    var eu=usersData[h.userId],assigned=eu&&eu.approverSupId;
-    if(assigned)return assigned===currentUser._key;
+    var eu=usersData[h.userId],a=getSupervisorAssignment(eu);
+    if(a.mode==="assigned")return a.id===currentUser._key;
+    if(a.mode==="skip")return false;
     return h.dept===dept;
   });
   var pendCnt=all.filter(function(h){return h.status==="pending";}).length;
@@ -948,6 +949,18 @@ function mgrSelectHolidayYear(y){ST.mgr.holidayYear=y;setYearBtn(y,"mgr-btn-year
 /* ── Submit leave ── */
 function getTypeLabelFull(type,sub){var tObj=TYPES.filter(function(t){return t.id===type;})[0];var base=tObj?tObj.label:type;if(!sub)return base;var subs=type==="sick"?SICK_SUB:OTHER_SUB;var sObj=subs.filter(function(s){return s.id===sub;})[0];return base+(sObj?" ("+sObj.label+")":"");}
 function getSubLabel(type,sub){if(!sub)return "";var subs=type==="sick"?SICK_SUB:OTHER_SUB;var sObj=subs.filter(function(s){return s.id===sub;})[0];return sObj?sObj.label:"";}
+function hasAvailableSupervisor(u){
+  var a=getSupervisorAssignment(u);
+  if(a.mode==="skip")return false;
+  if(a.mode==="assigned")return true;
+  return getAllUsers().some(function(x){return x.role==="supervisor"&&x.dept===u.dept&&x._key!==u._key;});
+}
+function getSupervisorAssignment(u){
+  if(!u)return {mode:"auto"};
+  if(u.approverSupId==="__SKIP__")return {mode:"skip"};
+  if(u.approverSupId&&usersData[u.approverSupId])return {mode:"assigned",id:u.approverSupId};
+  return {mode:"auto"};
+}
 async function submitLeave(prefix){
   var t=ST[prefix].type,sub=ST[prefix].sub,per=ST[prefix].period;
   var pre=prefix==="emp"?"":prefix+"-";
@@ -974,6 +987,7 @@ async function submitLeave(prefix){
   var toDate=isDayoff?fmtDate(dayoffDate):isComp?fmtDate(from):isHalf?fmtDate(from):fmtDate(to);
   var initStatus=prefix==="sup"?"supervisor_approved":"pending";
   var supInfo=prefix==="sup"?{supervisorId:currentUser._key,supervisorName:currentUser.name,supervisorNote:"ยื่นเองในฐานะหัวหน้างาน"}:{};
+  if(prefix!=="sup"&&!hasAvailableSupervisor(usersData[currentUser._key]||currentUser)){var skMode=getSupervisorAssignment(usersData[currentUser._key]||currentUser).mode==="skip";initStatus="supervisor_approved";supInfo={supervisorNote:skMode?"ข้ามขั้นตอนเห็นชอบ (ตั้งค่าโดยผู้ดูแลระบบ)":"ข้ามขั้นตอนเห็นชอบ (ไม่มีหัวหน้างานที่รับผิดชอบ)"};}
   var rec=Object.assign({userId:currentUser._key,userRole:currentUser.role,employee:currentUser.name,dept:currentUser.dept,type:t,subtype:sub||"",label:getTypeLabelFull(t,sub),sublabel:getSubLabel(t,sub),quotaKey:t,from:fmtDate(from),to:toDate,days:days,daysUnit:timeMode?"ชั่วโมง":"วัน",note:noteText,status:initStatus,submitted:fmtDate(new Date().toISOString().slice(0,10)),createdAt:Date.now()},supInfo);
   if(timeRange)rec.timeRange=timeRange;
   if(isComp&&compVal){var cpP=compVal.split("|");if(cpP[0])rec.compHolidayDate=cpP[0];}
@@ -1100,7 +1114,7 @@ function openApproverModal(key){
   var sups=all.filter(function(x){return x._key!==key&&x.role==="supervisor";});
   var mgrs=all.filter(function(x){return x._key!==key&&getRoleLevel(x.role)>=3&&x.role!=="admin";});
   function optLabel(x){return x.name+(x.dept?" ("+((DEPTS[x.dept]&&DEPTS[x.dept].label)||x.dept)+")":"")+" · "+(ROLE_LABEL[x.role]||x.role);}
-  $("appr-sup").innerHTML="<option value=''>-- ตามฝ่ายอัตโนมัติ --</option>"+sups.map(function(s){return "<option value='"+s._key+"'"+(u.approverSupId===s._key?" selected":"")+">"+optLabel(s)+"</option>";}).join("");
+  $("appr-sup").innerHTML="<option value=''>-- ตามฝ่ายอัตโนมัติ --</option><option value='__SKIP__'"+(u.approverSupId==="__SKIP__"?" selected":"")+">🚫 ข้าม (ไม่ต้องมีผู้เห็นชอบ)</option>"+sups.map(function(s){return "<option value='"+s._key+"'"+(u.approverSupId===s._key?" selected":"")+">"+optLabel(s)+"</option>";}).join("");
   $("appr-mgr").innerHTML="<option value=''>-- ตามฝ่ายอัตโนมัติ --</option>"+mgrs.map(function(s){return "<option value='"+s._key+"'"+(u.approverMgrId===s._key?" selected":"")+">"+optLabel(s)+"</option>";}).join("");
   show("approver-modal");
 }
