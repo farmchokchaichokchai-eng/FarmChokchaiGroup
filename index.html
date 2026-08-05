@@ -491,6 +491,16 @@ header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-inde
     <div class="modal-actions"><button class="btn-cancel" onclick="closeModal('quota-modal')">ยกเลิก</button><button class="btn-confirm" onclick="saveQuota()">บันทึก</button></div>
   </div>
 </div>
+<div id="approver-modal" class="modal-overlay hidden">
+  <div class="modal" style="max-width:440px"><h3>👥 กำหนดผู้อนุมัติ</h3><p id="approver-modal-name" style="font-size:13px;color:#777;margin-bottom:16px"></p>
+    <p style="font-size:11.5px;color:#999;margin-bottom:14px">ถ้าไม่เลือก ระบบจะใช้ค่าเริ่มต้นคือ "หัวหน้างาน/ผู้จัดการในฝ่ายเดียวกัน" ตามปกติ</p>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div><label class="field-label">ผู้เห็นชอบ (หัวหน้างาน)</label><select id="appr-sup" class="field-input"></select></div>
+      <div><label class="field-label">ผู้อนุมัติขั้นสุดท้าย (ผู้จัดการขึ้นไป)</label><select id="appr-mgr" class="field-input"></select></div>
+    </div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeModal('approver-modal')">ยกเลิก</button><button class="btn-confirm" onclick="saveApprover()">บันทึก</button></div>
+  </div>
+</div>
 <div id="time-picker-modal" class="modal-overlay hidden">
   <div class="modal" style="max-width:320px"><h3>⏰ ระบุช่วงเวลา</h3>
     <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:4px">
@@ -894,7 +904,12 @@ function supStatusTab(tab,btn){supStatusTabState=tab;document.querySelectorAll("
 function renderSupApprove(){
   if(!currentUser||currentUser.role!=="supervisor")return;
   var dept=currentUser.dept;
-  var all=getHistory().filter(function(h){return h.dept===dept&&getRoleLevel(h.userRole||"employee")===1;});
+  var all=getHistory().filter(function(h){
+    if(getRoleLevel(h.userRole||"employee")!==1)return false;
+    var eu=usersData[h.userId],assigned=eu&&eu.approverSupId;
+    if(assigned)return assigned===currentUser._key;
+    return h.dept===dept;
+  });
   var pendCnt=all.filter(function(h){return h.status==="pending";}).length;
   var s0=document.querySelectorAll("#sup-approve-section .subtab")[0];if(s0)s0.textContent="รอเห็นชอบ"+(pendCnt>0?" ("+pendCnt+")":"");
   var search=($("sup-search")||{value:""}).value||"";
@@ -914,7 +929,7 @@ function renderMgrOverview(){if(!currentUser||!isManagerLevel(currentUser.role)|
 function renderApprove(){
   if(!currentUser||!isManagerLevel(currentUser.role)||currentUser.role==="admin")return;
   var myRole=currentUser.role,myLv=getRoleLevel(myRole),dept=currentUser.dept,isSD=myRole==="deputy"&&dept==="special_dept";
-  var all=getHistory().filter(function(h){var tLv=getRoleLevel(h.userRole||"employee");if(isSD)return tLv===4;if(myRole==="deputy")return tLv===4&&h.dept===dept;return h.dept===dept&&tLv<myLv;});
+  var all=getHistory().filter(function(h){var tLv=getRoleLevel(h.userRole||"employee");var eu=usersData[h.userId],assigned=eu&&eu.approverMgrId;if(assigned)return assigned===currentUser._key;if(isSD)return tLv===4;if(myRole==="deputy")return tLv===4&&h.dept===dept;return h.dept===dept&&tLv<myLv;});
   var pCnt=all.filter(function(h){return h.status==="supervisor_approved";}).length;
   var stats={pending:pCnt,approved:all.filter(function(h){return h.status==="approved";}).length,rejected:all.filter(function(h){return h.status==="rejected";}).length};
   var s0=document.querySelectorAll("#mgr-approve-section .subtab")[0];if(s0)s0.textContent="รออนุมัติ"+(pCnt>0?" ("+pCnt+")":"");
@@ -1026,7 +1041,7 @@ function renderEmpTable(){
   var search=($("emp-search")||{value:""}).value.toLowerCase();
   var all=getAllUsers().filter(function(u){return !search||u.name.toLowerCase().includes(search)||u.username.toLowerCase().includes(search)||(u.position||"").toLowerCase().includes(search);});
   var tb=$("emp-tbody");if(!tb)return;
-  tb.innerHTML=all.length?all.map(function(u){var tenure=u.startDate?calcTenure(u.startDate):"",ci=u.company&&COMPANIES[u.company]?COMPANIES[u.company]:null;return "<tr><td><div style='font-weight:600'>"+u.name+"</div>"+(tenure?"<div style='font-size:11px;color:#aaa'>อายุงาน "+tenure+"</div>":"")+"</td><td style='font-family:monospace;font-size:12px;color:#666'>"+u.username+"</td><td>"+(u.position||"—")+"</td><td>"+(u.dept?deptPill(u.dept):"—")+"</td><td>"+(ci?"<span class='company-pill' style='color:"+ci.color+";background:"+ci.bg+";border-color:"+ci.border+"'>"+ci.short+"</span>":"—")+"</td><td><select onchange=\"changeRole('"+u._key+"',this.value)\" style='padding:4px 8px;border-radius:8px;border:1.5px solid #e8e8e8;font-size:12px;font-weight:600;color:"+ROLE_COLOR[u.role]+";background:#fafafa;cursor:pointer;outline:none'>"+Object.entries(ROLE_LABEL).map(function(e){return "<option value='"+e[0]+"'"+(u.role===e[0]?" selected":"")+">"+e[1]+"</option>";}).join("")+"</select></td><td style='white-space:nowrap'><button class='btn-edit' onclick=\"openEmpModal('"+u._key+"')\">✏️</button> <button class='btn-edit' style='border-color:#bfdbfe;color:#1e40af' onclick=\"openQuotaModal('"+u._key+"')\">📅</button>"+(u._key!==currentUser._key?" <button class='btn-del' onclick=\"openDelModal('"+u._key+"','"+u.name+"')\">🗑️</button>":"")+"</td></tr>";}).join(""):"<tr><td colspan='7' style='text-align:center;color:#bbb;padding:32px'>ไม่พบพนักงาน</td></tr>";
+  tb.innerHTML=all.length?all.map(function(u){var tenure=u.startDate?calcTenure(u.startDate):"",ci=u.company&&COMPANIES[u.company]?COMPANIES[u.company]:null;return "<tr><td><div style='font-weight:600'>"+u.name+"</div>"+(tenure?"<div style='font-size:11px;color:#aaa'>อายุงาน "+tenure+"</div>":"")+"</td><td style='font-family:monospace;font-size:12px;color:#666'>"+u.username+"</td><td>"+(u.position||"—")+"</td><td>"+(u.dept?deptPill(u.dept):"—")+"</td><td>"+(ci?"<span class='company-pill' style='color:"+ci.color+";background:"+ci.bg+";border-color:"+ci.border+"'>"+ci.short+"</span>":"—")+"</td><td><select onchange=\"changeRole('"+u._key+"',this.value)\" style='padding:4px 8px;border-radius:8px;border:1.5px solid #e8e8e8;font-size:12px;font-weight:600;color:"+ROLE_COLOR[u.role]+";background:#fafafa;cursor:pointer;outline:none'>"+Object.entries(ROLE_LABEL).map(function(e){return "<option value='"+e[0]+"'"+(u.role===e[0]?" selected":"")+">"+e[1]+"</option>";}).join("")+"</select></td><td style='white-space:nowrap'><button class='btn-edit' onclick=\"openEmpModal('"+u._key+"')\">✏️</button> <button class='btn-edit' style='border-color:#bfdbfe;color:#1e40af' onclick=\"openQuotaModal('"+u._key+"')\">📅</button>"+(canLeave(u.role)?" <button class='btn-edit' style='border-color:#ddd6fe;color:#6d28d9' onclick=\"openApproverModal('"+u._key+"')\" title='กำหนดผู้อนุมัติ'>👥</button>":"")+(u._key!==currentUser._key?" <button class='btn-del' onclick=\"openDelModal('"+u._key+"','"+u.name+"')\">🗑️</button>":"")+"</td></tr>";}).join(""):"<tr><td colspan='7' style='text-align:center;color:#bbb;padding:32px'>ไม่พบพนักงาน</td></tr>";
 }
 function openEmpModal(key){empEditId=key;$("em-err").classList.add("hidden");if(key){var u=usersData[key];if(!u)return;$("emp-modal-title").textContent="แก้ไขข้อมูลพนักงาน";$("em-name").value=u.name||"";$("em-username").value=u.username||"";$("em-password").value=u.password||"";$("em-position").value=u.position||"";$("em-startdate").value=u.startDate||"";$("em-dept").value=u.dept||"steak";$("em-role").value=u.role||"employee";$("em-custom-label").value=u.customRoleLabel||"";$("em-company").value=u.company||"";}else{$("emp-modal-title").textContent="เพิ่มพนักงานใหม่";["em-name","em-username","em-password","em-position","em-startdate","em-custom-label"].forEach(function(id){$(id).value="";});$("em-dept").value="steak";$("em-role").value="employee";$("em-company").value="";}show("emp-modal");}
 async function saveEmployee(){var name=($("em-name").value||"").trim(),username=($("em-username").value||"").trim(),password=($("em-password").value||"").trim(),position=($("em-position").value||"").trim(),startDate=$("em-startdate").value||"",dept=$("em-dept").value||"steak",role=$("em-role").value||"employee",customRoleLabel=($("em-custom-label").value||"").trim(),company=$("em-company").value||"";if(!name||!username||!password){$("em-err-text").textContent="กรุณากรอกชื่อ Username และรหัสผ่าน";show("em-err");return;}var snap=await refUsers().once("value"),all=snap.val()||{};if(Object.entries(all).filter(function(e){return e[1].username===username&&e[0]!==empEditId;}).length){$("em-err-text").textContent="Username นี้ถูกใช้แล้ว";show("em-err");return;}var data={name:name,username:username,password:password,position:position,startDate:startDate,dept:role==="admin"?null:dept,role:role,avatar:name[0],color:ROLE_COLOR[role]||"#1a1a1a",customRoleLabel:customRoleLabel,company:company};if(empEditId){await refUser(empEditId).update(data);}else{var nk=refUsers().push().key;await refUser(nk).set(data);if(canLeave(role))await refQuota().child(nk).set(JSON.parse(JSON.stringify(DEFAULT_QUOTA)));}closeModal("emp-modal");}
@@ -1074,6 +1089,26 @@ async function saveQuota(){
   if(!unlimited){document.querySelectorAll(".comp-holiday-cb").forEach(function(cb){if(cb.checked)compData[cb.dataset.date]=true;});}
   await db.ref(bPath("allowedHolidays")).child(quotaEditId).set(compData);
   closeModal("quota-modal");
+}
+
+/* ── Approver assignment ── */
+var approverEditId=null;
+function openApproverModal(key){
+  approverEditId=key;var u=usersData[key];if(!u)return;
+  $("approver-modal-name").textContent="👤 "+u.name+" · "+(u.position||"");
+  var all=getAllUsers();
+  var sups=all.filter(function(x){return x._key!==key&&x.role==="supervisor";});
+  var mgrs=all.filter(function(x){return x._key!==key&&getRoleLevel(x.role)>=3&&x.role!=="admin";});
+  function optLabel(x){return x.name+(x.dept?" ("+((DEPTS[x.dept]&&DEPTS[x.dept].label)||x.dept)+")":"")+" · "+(ROLE_LABEL[x.role]||x.role);}
+  $("appr-sup").innerHTML="<option value=''>-- ตามฝ่ายอัตโนมัติ --</option>"+sups.map(function(s){return "<option value='"+s._key+"'"+(u.approverSupId===s._key?" selected":"")+">"+optLabel(s)+"</option>";}).join("");
+  $("appr-mgr").innerHTML="<option value=''>-- ตามฝ่ายอัตโนมัติ --</option>"+mgrs.map(function(s){return "<option value='"+s._key+"'"+(u.approverMgrId===s._key?" selected":"")+">"+optLabel(s)+"</option>";}).join("");
+  show("approver-modal");
+}
+async function saveApprover(){
+  if(!approverEditId)return;
+  var supId=$("appr-sup").value||null,mgrId=$("appr-mgr").value||null;
+  await refUser(approverEditId).update({approverSupId:supId,approverMgrId:mgrId});
+  closeModal("approver-modal");
 }
 
 /* ── Sync quota ── */
