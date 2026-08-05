@@ -1114,7 +1114,7 @@ function openApproverModal(key){
   var sups=all.filter(function(x){return x._key!==key&&x.role==="supervisor";});
   var mgrs=all.filter(function(x){return x._key!==key&&getRoleLevel(x.role)>=3&&x.role!=="admin";});
   function optLabel(x){return x.name+(x.dept?" ("+((DEPTS[x.dept]&&DEPTS[x.dept].label)||x.dept)+")":"")+" · "+(ROLE_LABEL[x.role]||x.role);}
-  $("appr-sup").innerHTML="<option value=''>-- ตามฝ่ายอัตโนมัติ --</option><option value='__SKIP__'"+(u.approverSupId==="__SKIP__"?" selected":"")+">🚫 ข้าม (ไม่ต้องมีผู้เห็นชอบ)</option>"+sups.map(function(s){return "<option value='"+s._key+"'"+(u.approverSupId===s._key?" selected":"")+">"+optLabel(s)+"</option>";}).join("");
+  $("appr-sup").innerHTML="<option value=''>-- ตามฝ่ายอัตโนมัติ --</option><option value='__SKIP__'"+(u.approverSupId==="__SKIP__"?" selected":"")+">🚫 ข้าม (ไม่ต้องมีผู้เห็นชอบ)</option>"+sups.map(function(s){return "<option value='"+s._key+"'"+(u.approverSupId===s._key?" selected":"")+">"+optLabel(s)+"</option>";}).join("")+mgrs.map(function(s){return "<option value='"+s._key+"'"+(u.approverMgrId===s._key?" selected":"")+">"+optLabel(s)+"</option>";}).join("");
   $("appr-mgr").innerHTML="<option value=''>-- ตามฝ่ายอัตโนมัติ --</option>"+mgrs.map(function(s){return "<option value='"+s._key+"'"+(u.approverMgrId===s._key?" selected":"")+">"+optLabel(s)+"</option>";}).join("");
   show("approver-modal");
 }
