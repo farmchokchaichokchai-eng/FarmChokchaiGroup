@@ -996,9 +996,14 @@ async function submitLeave(prefix){
   else if(isComp){var cp=compVal.split("|");noteText="ชดเชย: "+cp[2]+" ("+cp[1]+" "+fmtDate(cp[0])+")"+(note?" · "+note:"");}
   else noteText=pLabel+(note?" "+note:"");
   var toDate=isDayoff?fmtDate(dayoffDate):isComp?fmtDate(from):isHalf?fmtDate(from):fmtDate(to);
-  var initStatus=prefix==="sup"?"supervisor_approved":"pending";
-  var supInfo=prefix==="sup"?{supervisorId:currentUser._key,supervisorName:currentUser.name,supervisorNote:"ยื่นเองในฐานะหัวหน้างาน"}:{};
-  if(prefix!=="sup"&&!hasAvailableSupervisor(usersData[currentUser._key]||currentUser)){var skMode=getSupervisorAssignment(usersData[currentUser._key]||currentUser).mode==="skip";initStatus="supervisor_approved";supInfo={supervisorNote:skMode?"ข้ามขั้นตอนเห็นชอบ (ตั้งค่าโดยผู้ดูแลระบบ)":"ข้ามขั้นตอนเห็นชอบ (ไม่มีหัวหน้างานที่รับผิดชอบ)"};}
+  var selfUser=usersData[currentUser._key]||currentUser;
+  var supAssign=getSupervisorAssignment(selfUser);
+  var initStatus,supInfo;
+  if(supAssign.mode==="assigned"){initStatus="pending";supInfo={};}
+  else if(supAssign.mode==="skip"){initStatus="supervisor_approved";supInfo={supervisorNote:"ข้ามขั้นตอนเห็นชอบ (ตั้งค่าโดยผู้ดูแลระบบ)"};}
+  else if(prefix==="sup"){initStatus="supervisor_approved";supInfo={supervisorId:currentUser._key,supervisorName:currentUser.name,supervisorNote:"ยื่นเองในฐานะหัวหน้างาน"};}
+  else if(!hasAvailableSupervisor(selfUser)){initStatus="supervisor_approved";supInfo={supervisorNote:"ข้ามขั้นตอนเห็นชอบ (ไม่มีหัวหน้างานที่รับผิดชอบ)"};}
+  else{initStatus="pending";supInfo={};}
   var rec=Object.assign({userId:currentUser._key,userRole:currentUser.role,employee:currentUser.name,dept:currentUser.dept,type:t,subtype:sub||"",label:getTypeLabelFull(t,sub),sublabel:getSubLabel(t,sub),quotaKey:t,from:fmtDate(from),to:toDate,days:days,daysUnit:timeMode?"ชั่วโมง":"วัน",note:noteText,status:initStatus,submitted:fmtDate(new Date().toISOString().slice(0,10)),createdAt:Date.now()},supInfo);
   if(timeRange)rec.timeRange=timeRange;
   if(isComp&&compVal){var cpP=compVal.split("|");if(cpP[0])rec.compHolidayDate=cpP[0];}
