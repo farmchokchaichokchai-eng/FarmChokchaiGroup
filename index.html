@@ -356,6 +356,7 @@ header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-inde
           <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
             <span style="font-weight:600;font-size:14px" id="mgr-title"></span>
             <div class="subtabs">
+              <button class="subtab" id="mgr-subtab-pending" onclick="mgrStatusTab('pending',this)">รอเห็นชอบ</button>
               <button class="subtab active" onclick="mgrStatusTab('supervisor_approved',this)">รออนุมัติ</button>
               <button class="subtab" onclick="mgrStatusTab('approved',this)">อนุมัติแล้ว</button>
               <button class="subtab" onclick="mgrStatusTab('rejected',this)">ไม่อนุมัติ</button>
@@ -930,10 +931,20 @@ function renderMgrOverview(){if(!currentUser||!isManagerLevel(currentUser.role)|
 function renderApprove(){
   if(!currentUser||!isManagerLevel(currentUser.role)||currentUser.role==="admin")return;
   var myRole=currentUser.role,myLv=getRoleLevel(myRole),dept=currentUser.dept,isSD=myRole==="deputy"&&dept==="special_dept";
-  var all=getHistory().filter(function(h){var tLv=getRoleLevel(h.userRole||"employee");var eu=usersData[h.userId],assigned=eu&&eu.approverMgrId;if(assigned)return assigned===currentUser._key;if(isSD)return tLv===4;if(myRole==="deputy")return tLv===4&&h.dept===dept;return h.dept===dept&&tLv<myLv;});
+  var all=getHistory().filter(function(h){
+    var tLv=getRoleLevel(h.userRole||"employee");
+    var eu=usersData[h.userId],assignedMgr=eu&&eu.approverMgrId,assignedSup=eu&&eu.approverSupId;
+    if(assignedSup===currentUser._key&&h.status==="pending")return true;
+    if(assignedMgr)return assignedMgr===currentUser._key;
+    if(isSD)return tLv===4;
+    if(myRole==="deputy")return tLv===4&&h.dept===dept;
+    return h.dept===dept&&tLv<myLv;
+  });
   var pCnt=all.filter(function(h){return h.status==="supervisor_approved";}).length;
+  var consentCnt=all.filter(function(h){return h.status==="pending";}).length;
   var stats={pending:pCnt,approved:all.filter(function(h){return h.status==="approved";}).length,rejected:all.filter(function(h){return h.status==="rejected";}).length};
-  var s0=document.querySelectorAll("#mgr-approve-section .subtab")[0];if(s0)s0.textContent="รออนุมัติ"+(pCnt>0?" ("+pCnt+")":"");
+  document.querySelectorAll("#mgr-approve-section .subtab")[1].textContent="รออนุมัติ"+(pCnt>0?" ("+pCnt+")":"");
+  $("mgr-subtab-pending").textContent="รอเห็นชอบ"+(consentCnt>0?" ("+consentCnt+")":"");
   $("mgr-title").textContent="คำขอลา — "+((DEPTS[dept]&&DEPTS[dept].label)||dept||"");
   $("mgr-stats").innerHTML=renderStats(stats);
   var search=($("mgr-search")||{value:""}).value||"";
@@ -1031,6 +1042,7 @@ function renderRows(filtered,mode){
     var modeStr=mode==="admin"?"admin":mode==="supervisor"?"supervisor":mode==="manager"?"approve":"view";
     var actions="";
     if(mode==="supervisor"&&item.status==="pending"){actions="<button class='btn-consent' onclick='event.stopPropagation();consentItem(\""+item._key+"\")'>👁️ เห็นชอบ</button> <button class='btn-reject-sm' onclick='event.stopPropagation();openRejectItem(\""+item._key+"\",\"not_consent\")'>✕</button>";}
+    else if(mode==="manager"&&item.status==="pending"){actions="<button class='btn-consent' onclick='event.stopPropagation();consentItem(\""+item._key+"\")'>👁️ เห็นชอบ</button> <button class='btn-reject-sm' onclick='event.stopPropagation();openRejectItem(\""+item._key+"\",\"not_consent\")'>✕</button>";}
     else if(mode==="manager"&&item.status==="supervisor_approved"){actions="<button class='btn-approve' onclick='event.stopPropagation();approveItemDirect(\""+item._key+"\",\""+item.userId+"\",\""+(item.quotaKey||item.type)+"\","+item.days+",\""+(item.daysUnit||"วัน")+"\")'>✓</button> <button class='btn-reject-sm' onclick='event.stopPropagation();openRejectItem(\""+item._key+"\",\"reject\")'>✕</button>";}
     else if(mode==="admin"){if(item.status==="pending"||item.status==="supervisor_approved")actions="<button class='btn-approve' onclick='event.stopPropagation();approveItemDirect(\""+item._key+"\",\""+item.userId+"\",\""+(item.quotaKey||item.type)+"\","+item.days+",\""+(item.daysUnit||"วัน")+"\")'>✓</button> ";actions+="<button class='btn-reject-sm' onclick='event.stopPropagation();openRejectItem(\""+item._key+"\",\"reject\")'>✕</button> <button class='btn-edit' style='border-color:#bfdbfe;color:#1e40af' onclick='event.stopPropagation();openCancelModal(\""+item._key+"\")'>✏️</button>";}
     else actions=statusBadge(item.status);
@@ -1111,10 +1123,10 @@ function openApproverModal(key){
   approverEditId=key;var u=usersData[key];if(!u)return;
   $("approver-modal-name").textContent="👤 "+u.name+" · "+(u.position||"");
   var all=getAllUsers();
-  var sups=all.filter(function(x){return x._key!==key&&x.role==="supervisor";});
+  var sups=all.filter(function(x){return x._key!==key&&getRoleLevel(x.role)>=2&&x.role!=="admin";});
   var mgrs=all.filter(function(x){return x._key!==key&&getRoleLevel(x.role)>=3&&x.role!=="admin";});
   function optLabel(x){return x.name+(x.dept?" ("+((DEPTS[x.dept]&&DEPTS[x.dept].label)||x.dept)+")":"")+" · "+(ROLE_LABEL[x.role]||x.role);}
-  $("appr-sup").innerHTML="<option value=''>-- ตามฝ่ายอัตโนมัติ --</option><option value='__SKIP__'"+(u.approverSupId==="__SKIP__"?" selected":"")+">🚫 ข้าม (ไม่ต้องมีผู้เห็นชอบ)</option>"+sups.map(function(s){return "<option value='"+s._key+"'"+(u.approverSupId===s._key?" selected":"")+">"+optLabel(s)+"</option>";}).join("")+mgrs.map(function(s){return "<option value='"+s._key+"'"+(u.approverMgrId===s._key?" selected":"")+">"+optLabel(s)+"</option>";}).join("");
+  $("appr-sup").innerHTML="<option value=''>-- ตามฝ่ายอัตโนมัติ --</option><option value='__SKIP__'"+(u.approverSupId==="__SKIP__"?" selected":"")+">🚫 ข้าม (ไม่ต้องมีผู้เห็นชอบ)</option>"+sups.map(function(s){return "<option value='"+s._key+"'"+(u.approverSupId===s._key?" selected":"")+">"+optLabel(s)+"</option>";}).join("");
   $("appr-mgr").innerHTML="<option value=''>-- ตามฝ่ายอัตโนมัติ --</option>"+mgrs.map(function(s){return "<option value='"+s._key+"'"+(u.approverMgrId===s._key?" selected":"")+">"+optLabel(s)+"</option>";}).join("");
   show("approver-modal");
 }
