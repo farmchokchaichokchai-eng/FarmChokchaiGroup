@@ -144,6 +144,7 @@ header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-inde
       <div id="login-error" class="error-msg hidden"><span>⚠️</span><span id="login-error-text"></span></div>
       <button id="btn-login" class="btn-login" onclick="doLogin()">เข้าสู่ระบบ →</button>
     </div>
+    <p style="text-align:center;font-size:11.5px;color:#bbb;margin-top:16px">พัฒนาโดยฝ่าย IT · Farm Chokchai Group</p>
   </div>
 </div>
 
@@ -375,6 +376,7 @@ header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-inde
     <div class="tabs">
       <button class="tab-btn active" onclick="adminMainTab('leaves',this)">📋 คำขอลา</button>
       <button class="tab-btn" onclick="adminMainTab('employees',this)">👥 จัดการพนักงาน</button>
+      <button class="tab-btn" onclick="adminMainTab('holidays',this)">🗓️ วันหยุดชดเชย</button>
     </div>
     <div id="admin-leaves">
       <div class="grid3" id="admin-stats"></div>
@@ -400,6 +402,7 @@ header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-inde
             </select>
             <button onclick="exportExcel()" style="padding:8px 12px;border-radius:8px;border:1.5px solid #d1fae5;background:#f0fdf4;color:#166534;font-size:12px;font-weight:600;cursor:pointer">⬇️ Excel</button>
             <button onclick="openTigerSoftModal()" style="padding:8px 12px;border-radius:8px;border:1.5px solid #ddd6fe;background:#f5f3ff;color:#5b21b6;font-size:12px;font-weight:600;cursor:pointer">🐯 TigerSoft</button>
+            <button onclick="openTelegramSettingsModal()" style="padding:8px 12px;border-radius:8px;border:1.5px solid #bfdbfe;background:#eff6ff;color:#1e40af;font-size:12px;font-weight:600;cursor:pointer">🔔 แจ้งเตือน Telegram</button>
           </div>
         </div>
         <div id="admin-list"></div>
@@ -430,7 +433,16 @@ header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-inde
         <tbody id="emp-tbody"></tbody>
       </table></div></div>
     </div>
+    <div id="admin-holidays" class="hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+        <p style="font-size:12.5px;color:#999">จัดการวันหยุดชดเชยของแต่ละปี — ใช้เป็นตัวเลือกตอนพนักงานยื่น "ลาชดเชย"</p>
+        <button onclick="addHolidayYear()" style="padding:9px 14px;border-radius:10px;border:1.5px solid #bfdbfe;background:#eff6ff;color:#1e40af;font-size:13px;font-weight:600;cursor:pointer">+ เพิ่มปี</button>
+      </div>
+      <div id="admin-holidays-years" class="subtabs" style="margin-bottom:16px"></div>
+      <div id="admin-holidays-list" style="display:flex;flex-direction:column;gap:18px"></div>
+    </div>
   </div>
+  <footer style="text-align:center;padding:20px 16px 24px;font-size:11.5px;color:#bbb">พัฒนาโดยฝ่าย IT · Farm Chokchai Group</footer>
 </div>
 
 <!-- Modals -->
@@ -466,6 +478,7 @@ header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-inde
         <select id="em-role" class="field-input"><option value="employee">1. พนักงาน</option><option value="supervisor">2. หัวหน้างาน</option><option value="assistant_mgr">3. ผู้ช่วยผู้จัดการ</option><option value="manager">4. ผู้จัดการ</option><option value="deputy">5. รองกรรมการผู้จัดการ</option><option value="admin">6. ผู้ดูแลระบบ</option></select>
       </div>
       <div><label class="field-label">ชื่อตำแหน่งพิเศษ</label><input id="em-custom-label" class="field-input" placeholder="เช่น ประธานเจ้าหน้าที่บริหาร"></div>
+      <div><label class="field-label">Telegram Chat ID (สำหรับแจ้งเตือนส่วนตัว)</label><input id="em-telegram" class="field-input" placeholder="เช่น 123456789 (ไม่บังคับ)"></div>
       <div id="em-err" class="error-msg hidden"><span>⚠️</span><span id="em-err-text"></span></div>
     </div>
     <div class="modal-actions"><button class="btn-cancel" onclick="closeModal('emp-modal')">ยกเลิก</button><button class="btn-confirm" onclick="saveEmployee()">บันทึก</button></div>
@@ -500,6 +513,36 @@ header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-inde
       <div><label class="field-label">ผู้อนุมัติขั้นสุดท้าย (ผู้จัดการขึ้นไป)</label><select id="appr-mgr" class="field-input"></select></div>
     </div>
     <div class="modal-actions"><button class="btn-cancel" onclick="closeModal('approver-modal')">ยกเลิก</button><button class="btn-confirm" onclick="saveApprover()">บันทึก</button></div>
+  </div>
+</div>
+<div id="telegram-modal" class="modal-overlay hidden">
+  <div class="modal" style="max-width:460px"><h3>🔔 ตั้งค่าแจ้งเตือน Telegram</h3>
+    <p style="font-size:11.5px;color:#999;margin-bottom:14px">ระบบจะส่งข้อความแจ้งเตือนทันทีที่พนักงานยื่นใบลา ไปที่กลุ่ม/แชทที่ตั้งค่าไว้ด้านล่าง (สร้างบอทฟรีผ่าน @BotFather แล้วเพิ่มบอทเข้ากลุ่ม จากนั้นหา Chat ID ของกลุ่ม)</p>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div><label class="field-label">Bot Token</label><input id="tg-token" class="field-input" placeholder="เช่น 123456789:AAExxxxxxxxxxxxxxxxxxxxxxxxxxxx"></div>
+      <div><label class="field-label">Chat ID กลุ่มหลัก (แจ้งเตือนรวม)</label><input id="tg-chatid" class="field-input" placeholder="เช่น -1001234567890"></div>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px"><input type="checkbox" id="tg-enabled" style="width:16px;height:16px"> เปิดใช้งานการแจ้งเตือน</label>
+    </div>
+    <div id="tg-test-result" style="font-size:12px;margin-top:10px"></div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="testTelegram()">ทดสอบส่งข้อความ</button><button class="btn-confirm" onclick="saveTelegramSettings()">บันทึก</button></div>
+  </div>
+</div>
+<div id="holiday-modal" class="modal-overlay hidden">
+  <div class="modal" style="max-width:400px"><h3 id="holiday-modal-title">เพิ่มวันหยุดชดเชย</h3>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div><label class="field-label">ชื่อวันหยุด</label><input id="hd-name" class="field-input" placeholder="เช่น วันสงกรานต์"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label class="field-label">วันที่</label><input id="hd-day" type="number" min="1" max="31" class="field-input"></div>
+        <div><label class="field-label">เดือน</label><select id="hd-month" class="field-input">
+          <option value="1">ม.ค.</option><option value="2">ก.พ.</option><option value="3">มี.ค.</option><option value="4">เม.ย.</option><option value="5">พ.ค.</option><option value="6">มิ.ย.</option><option value="7">ก.ค.</option><option value="8">ส.ค.</option><option value="9">ก.ย.</option><option value="10">ต.ค.</option><option value="11">พ.ย.</option><option value="12">ธ.ค.</option>
+        </select></div>
+      </div>
+      <div><label class="field-label">วันในสัปดาห์</label><select id="hd-weekday" class="field-input">
+        <option value="จันทร์">จันทร์</option><option value="อังคาร">อังคาร</option><option value="พุธ">พุธ</option><option value="พฤหัสบดี">พฤหัสบดี</option><option value="ศุกร์">ศุกร์</option><option value="เสาร์">เสาร์</option><option value="อาทิตย์">อาทิตย์</option>
+      </select></div>
+      <div id="hd-err" class="error-msg hidden"><span>⚠️</span><span id="hd-err-text"></span></div>
+    </div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeModal('holiday-modal')">ยกเลิก</button><button class="btn-confirm" onclick="saveHolidayEntry()">บันทึก</button></div>
   </div>
 </div>
 <div id="time-picker-modal" class="modal-overlay hidden">
@@ -598,8 +641,20 @@ var SICK_SUB=[{id:"sick_cert",label:"มีใบรับรองแพทย�
 var OTHER_SUB=[{id:"other_work_injury",label:"เจ็บในงาน",sub:"Work Injury",icon:"🦺"},{id:"other_military",label:"ลาระดมพล",sub:"Military Mobilization",icon:"🎖️"},{id:"other_ordained",label:"ลาอุปสมบท",sub:"Ordination Leave",icon:"🙏"}];
 var TIME_TYPES=["sick","personal"];
 var DEFAULT_QUOTA={annual:{used:0,total:6},sick:{used:0,total:30},personal:{used:0,total:6},comp:{used:0,total:20},maternity:{used:0,total:120},special:{used:0,total:7},dayoff:{used:0,total:0},other:{used:0,total:0}};
-var H2568=[{date:"2568-01-01",day:"พุธ",name:"วันขึ้นปีใหม่"},{date:"2568-02-12",day:"พุธ",name:"วันมาฆบูชา"},{date:"2568-04-06",day:"อาทิตย์",name:"วันจักรี"},{date:"2568-04-13",day:"อาทิตย์",name:"วันสงกรานต์"},{date:"2568-04-14",day:"จันทร์",name:"วันสงกรานต์"},{date:"2568-04-15",day:"อังคาร",name:"วันสงกรานต์"},{date:"2568-05-01",day:"พฤหัสบดี",name:"วันแรงงาน"},{date:"2568-05-04",day:"อาทิตย์",name:"วันฉัตรมงคล"},{date:"2568-05-11",day:"อาทิตย์",name:"วันวิสาขบูชา"},{date:"2568-06-03",day:"อังคาร",name:"วันเฉลิมพระชนมพรรษาราชินี"},{date:"2568-07-10",day:"พฤหัสบดี",name:"วันอาสาฬหบูชา"},{date:"2568-07-28",day:"จันทร์",name:"วันเฉลิมพระชนมพรรษา ร.10"},{date:"2568-08-12",day:"อังคาร",name:"วันแม่แห่งชาติ"},{date:"2568-10-13",day:"จันทร์",name:"วันนวมินทรมหาราช"},{date:"2568-10-23",day:"พฤหัสบดี",name:"วันปิยมหาราช"},{date:"2568-12-05",day:"ศุกร์",name:"วันชาติและวันพ่อ"},{date:"2568-12-10",day:"พุธ",name:"วันรัฐธรรมนูญ"},{date:"2568-12-31",day:"พุธ",name:"วันสิ้นปี"}];
-var H2569=[{date:"2569-01-01",day:"พฤหัสบดี",name:"วันขึ้นปีใหม่"},{date:"2569-04-13",day:"จันทร์",name:"วันสงกรานต์"},{date:"2569-04-14",day:"อังคาร",name:"วันสงกรานต์"},{date:"2569-04-15",day:"พุธ",name:"วันสงกรานต์"},{date:"2569-05-01",day:"ศุกร์",name:"วันแรงงาน"},{date:"2569-05-04",day:"จันทร์",name:"วันฉัตรมงคล"},{date:"2569-07-28",day:"อังคาร",name:"วันเฉลิมพระชนมพรรษา ร.10"},{date:"2569-08-12",day:"พุธ",name:"วันแม่แห่งชาติ"},{date:"2569-10-13",day:"อังคาร",name:"วันนวมินทรมหาราช"},{date:"2569-10-23",day:"ศุกร์",name:"วันปิยมหาราช"},{date:"2569-12-05",day:"เสาร์",name:"วันชาติและวันพ่อ"},{date:"2569-12-10",day:"พฤหัสบดี",name:"วันรัฐธรรมนูญ"},{date:"2569-12-31",day:"พฤหัสบดี",name:"วันสิ้นปี"}];
+var DEFAULT_H2568=[{date:"2568-01-01",day:"พุธ",name:"วันขึ้นปีใหม่"},{date:"2568-02-12",day:"พุธ",name:"วันมาฆบูชา"},{date:"2568-04-06",day:"อาทิตย์",name:"วันจักรี"},{date:"2568-04-13",day:"อาทิตย์",name:"วันสงกรานต์"},{date:"2568-04-14",day:"จันทร์",name:"วันสงกรานต์"},{date:"2568-04-15",day:"อังคาร",name:"วันสงกรานต์"},{date:"2568-05-01",day:"พฤหัสบดี",name:"วันแรงงาน"},{date:"2568-05-04",day:"อาทิตย์",name:"วันฉัตรมงคล"},{date:"2568-05-11",day:"อาทิตย์",name:"วันวิสาขบูชา"},{date:"2568-06-03",day:"อังคาร",name:"วันเฉลิมพระชนมพรรษาราชินี"},{date:"2568-07-10",day:"พฤหัสบดี",name:"วันอาสาฬหบูชา"},{date:"2568-07-28",day:"จันทร์",name:"วันเฉลิมพระชนมพรรษา ร.10"},{date:"2568-08-12",day:"อังคาร",name:"วันแม่แห่งชาติ"},{date:"2568-10-13",day:"จันทร์",name:"วันนวมินทรมหาราช"},{date:"2568-10-23",day:"พฤหัสบดี",name:"วันปิยมหาราช"},{date:"2568-12-05",day:"ศุกร์",name:"วันชาติและวันพ่อ"},{date:"2568-12-10",day:"พุธ",name:"วันรัฐธรรมนูญ"},{date:"2568-12-31",day:"พุธ",name:"วันสิ้นปี"}];
+var DEFAULT_H2569=[{date:"2569-01-01",day:"พฤหัสบดี",name:"วันขึ้นปีใหม่"},{date:"2569-04-13",day:"จันทร์",name:"วันสงกรานต์"},{date:"2569-04-14",day:"อังคาร",name:"วันสงกรานต์"},{date:"2569-04-15",day:"พุธ",name:"วันสงกรานต์"},{date:"2569-05-01",day:"ศุกร์",name:"วันแรงงาน"},{date:"2569-05-04",day:"จันทร์",name:"วันฉัตรมงคล"},{date:"2569-07-28",day:"อังคาร",name:"วันเฉลิมพระชนมพรรษา ร.10"},{date:"2569-08-12",day:"พุธ",name:"วันแม่แห่งชาติ"},{date:"2569-10-13",day:"อังคาร",name:"วันนวมินทรมหาราช"},{date:"2569-10-23",day:"ศุกร์",name:"วันปิยมหาราช"},{date:"2569-12-05",day:"เสาร์",name:"วันชาติและวันพ่อ"},{date:"2569-12-10",day:"พฤหัสบดี",name:"วันรัฐธรรมนูญ"},{date:"2569-12-31",day:"พฤหัสบดี",name:"วันสิ้นปี"}];
+var DEFAULT_HOLIDAYS={2568:DEFAULT_H2568,2569:DEFAULT_H2569};
+var holidaysData={};
+function getYearHolidays(year){
+  var custom=holidaysData[year];
+  if(custom)return Object.keys(custom).sort().map(function(d){return {date:d,day:custom[d].day,name:custom[d].name};});
+  return DEFAULT_HOLIDAYS[year]||[];
+}
+function getHolidayYears(){
+  var ys={2568:1,2569:1};
+  Object.keys(holidaysData).forEach(function(y){ys[y]=1;});
+  return Object.keys(ys).map(Number).sort(function(a,b){return a-b;});
+}
 var MONTHS=["","ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
 var STATUS_CFG={approved:{label:"อนุมัติแล้ว",cls:"b-approved",color:"#166534",bg:"#f0fdf4",border:"#bbf7d0"},pending:{label:"รออนุมัติ",cls:"b-pending",color:"#92400e",bg:"#fffbeb",border:"#fde68a"},supervisor_approved:{label:"ผ่านหัวหน้างาน",cls:"b-supervisor_approved",color:"#1e40af",bg:"#eff6ff",border:"#bfdbfe"},rejected:{label:"ไม่อนุมัติ",cls:"b-rejected",color:"#991b1b",bg:"#fef2f2",border:"#fecaca"},cancelled:{label:"ยกเลิก",cls:"b-cancelled",color:"#555",bg:"#f5f5f5",border:"#e0e0e0"}};
 var TYPE_CLS={sick_cert:"b-sick",sick_no_cert:"b-sick",sick:"b-sick",personal:"b-personal",comp:"b-personal",maternity:"b-maternity",special:"b-special",dayoff:"b-dayoff",annual:"b-annual",other:"b-other"};
@@ -609,7 +664,7 @@ var currentUser=null,selectedBranchLogin="farm";
 var ST={emp:{type:"",sub:"",period:"full",holidayYear:2568},sup:{type:"",sub:"",period:"full",holidayYear:2568},mgr:{type:"",sub:"",period:"full",holidayYear:2568}};
 var mgrStatusTabState="supervisor_approved",supStatusTabState="pending",adminLeaveTabState="pending";
 var rejectTargetId=null,cancelTargetId=null,empEditId=null,delTargetId=null,quotaEditId=null;
-var historyData={},quotaData={},usersData={},importRows=[],allowedHolidaysData={};
+var historyData={},quotaData={},usersData={},importRows=[],allowedHolidaysData={},telegramSettings=null;
 var timePickerPrefix="emp",ldCurrentItem=null,ldMode="view",copySourceEmps=[];
 
 /* ── Helpers ── */
@@ -642,8 +697,10 @@ function startListeners(){
   refHistory().on("value",function(s){historyData=s.val()||{};refreshViews();});
   refQuota().on("value",function(s){quotaData=s.val()||{};refreshViews();});
   db.ref(bPath("allowedHolidays")).on("value",function(s){allowedHolidaysData=s.val()||{};});
+  db.ref(bPath("holidays")).on("value",function(s){holidaysData=s.val()||{};if($("admin-holidays")&&!$("admin-holidays").classList.contains("hidden"))renderAdminHolidays();});
+  db.ref(bPath("settings/telegram")).on("value",function(s){telegramSettings=s.val()||null;});
 }
-function stopListeners(){if(currentBranch){["users","history","quota","allowedHolidays"].forEach(function(p){db.ref(currentBranch+"/"+p).off();});}}
+function stopListeners(){if(currentBranch){["users","history","quota","allowedHolidays","holidays","settings/telegram"].forEach(function(p){db.ref(currentBranch+"/"+p).off();});}}
 function refreshViews(){
   if(!currentUser)return;
   var r=currentUser.role;
@@ -661,7 +718,7 @@ function buildHolidayDropdown(year,selId,uid){
   var cbMap={"f-comp-holiday":"updateSubmitBtn","sup-f-comp-holiday":"supUpdateSubmitBtn","mgr-f-comp-holiday":"mgrUpdateSubmitBtn"};
   newSel.setAttribute("onchange",(cbMap[selId]||"updateSubmitBtn")+"()");
   var def=document.createElement("option");def.value="";def.textContent="-- เลือก --";newSel.appendChild(def);
-  var list=year===2569?H2569:H2568;
+  var list=getYearHolidays(year);
   var uid2=uid||(currentUser?currentUser._key:null);
   var used=uid2?getUsedCompDates(uid2):new Set();
   var allowed=uid2?(allowedHolidaysData[uid2]||null):null;
@@ -1008,6 +1065,7 @@ async function submitLeave(prefix){
   if(timeRange)rec.timeRange=timeRange;
   if(isComp&&compVal){var cpP=compVal.split("|");if(cpP[0])rec.compHolidayDate=cpP[0];}
   await refHistory().push(rec);
+  notifyLeaveSubmitted(rec,initStatus);
   // reset state
   ST[prefix].type="";ST[prefix].sub="";ST[prefix].period="full";
   [pre+"f-from",pre+"f-to",pre+"f-dayoff",pre+"f-single-date"].forEach(function(id){var e=$(id);if(e)e.value="";});
@@ -1026,7 +1084,7 @@ async function submitLeave(prefix){
 }
 
 /* ── Admin leaves ── */
-function adminMainTab(tab,btn){document.querySelectorAll("#view-admin > .tabs .tab-btn").forEach(function(b){b.classList.remove("active");});btn.classList.add("active");if(tab==="leaves"){show("admin-leaves");hide("admin-employees");}else{hide("admin-leaves");show("admin-employees");}}
+function adminMainTab(tab,btn){document.querySelectorAll("#view-admin > .tabs .tab-btn").forEach(function(b){b.classList.remove("active");});btn.classList.add("active");hide("admin-leaves");hide("admin-employees");hide("admin-holidays");if(tab==="leaves")show("admin-leaves");else if(tab==="employees")show("admin-employees");else{show("admin-holidays");renderAdminHolidays();}}
 function adminStatusTab(tab,btn){adminLeaveTabState=tab;document.querySelectorAll("#admin-leaves .subtab").forEach(function(b){b.classList.remove("active");});btn.classList.add("active");renderLeaves();}
 function renderLeaves(){
   if(!currentUser||currentUser.role!=="admin")return;
@@ -1074,8 +1132,8 @@ function renderEmpTable(){
   var tb=$("emp-tbody");if(!tb)return;
   tb.innerHTML=all.length?all.map(function(u){var tenure=u.startDate?calcTenure(u.startDate):"",ci=u.company&&COMPANIES[u.company]?COMPANIES[u.company]:null;return "<tr><td><div style='font-weight:600'>"+u.name+"</div>"+(tenure?"<div style='font-size:11px;color:#aaa'>อายุงาน "+tenure+"</div>":"")+"</td><td style='font-family:monospace;font-size:12px;color:#666'>"+u.username+"</td><td>"+(u.position||"—")+"</td><td>"+(u.dept?deptPill(u.dept):"—")+"</td><td>"+(ci?"<span class='company-pill' style='color:"+ci.color+";background:"+ci.bg+";border-color:"+ci.border+"'>"+ci.short+"</span>":"—")+"</td><td><select onchange=\"changeRole('"+u._key+"',this.value)\" style='padding:4px 8px;border-radius:8px;border:1.5px solid #e8e8e8;font-size:12px;font-weight:600;color:"+ROLE_COLOR[u.role]+";background:#fafafa;cursor:pointer;outline:none'>"+Object.entries(ROLE_LABEL).map(function(e){return "<option value='"+e[0]+"'"+(u.role===e[0]?" selected":"")+">"+e[1]+"</option>";}).join("")+"</select></td><td style='white-space:nowrap'><button class='btn-edit' onclick=\"openEmpModal('"+u._key+"')\">✏️</button> <button class='btn-edit' style='border-color:#bfdbfe;color:#1e40af' onclick=\"openQuotaModal('"+u._key+"')\">📅</button>"+(canLeave(u.role)?" <button class='btn-edit' style='border-color:#ddd6fe;color:#6d28d9' onclick=\"openApproverModal('"+u._key+"')\" title='กำหนดผู้อนุมัติ'>👥</button>":"")+(u._key!==currentUser._key?" <button class='btn-del' onclick=\"openDelModal('"+u._key+"','"+u.name+"')\">🗑️</button>":"")+"</td></tr>";}).join(""):"<tr><td colspan='7' style='text-align:center;color:#bbb;padding:32px'>ไม่พบพนักงาน</td></tr>";
 }
-function openEmpModal(key){empEditId=key;$("em-err").classList.add("hidden");if(key){var u=usersData[key];if(!u)return;$("emp-modal-title").textContent="แก้ไขข้อมูลพนักงาน";$("em-name").value=u.name||"";$("em-username").value=u.username||"";$("em-password").value=u.password||"";$("em-position").value=u.position||"";$("em-startdate").value=u.startDate||"";$("em-dept").value=u.dept||"steak";$("em-role").value=u.role||"employee";$("em-custom-label").value=u.customRoleLabel||"";$("em-company").value=u.company||"";}else{$("emp-modal-title").textContent="เพิ่มพนักงานใหม่";["em-name","em-username","em-password","em-position","em-startdate","em-custom-label"].forEach(function(id){$(id).value="";});$("em-dept").value="steak";$("em-role").value="employee";$("em-company").value="";}show("emp-modal");}
-async function saveEmployee(){var name=($("em-name").value||"").trim(),username=($("em-username").value||"").trim(),password=($("em-password").value||"").trim(),position=($("em-position").value||"").trim(),startDate=$("em-startdate").value||"",dept=$("em-dept").value||"steak",role=$("em-role").value||"employee",customRoleLabel=($("em-custom-label").value||"").trim(),company=$("em-company").value||"";if(!name||!username||!password){$("em-err-text").textContent="กรุณากรอกชื่อ Username และรหัสผ่าน";show("em-err");return;}var snap=await refUsers().once("value"),all=snap.val()||{};if(Object.entries(all).filter(function(e){return e[1].username===username&&e[0]!==empEditId;}).length){$("em-err-text").textContent="Username นี้ถูกใช้แล้ว";show("em-err");return;}var data={name:name,username:username,password:password,position:position,startDate:startDate,dept:role==="admin"?null:dept,role:role,avatar:name[0],color:ROLE_COLOR[role]||"#1a1a1a",customRoleLabel:customRoleLabel,company:company};if(empEditId){await refUser(empEditId).update(data);}else{var nk=refUsers().push().key;await refUser(nk).set(data);if(canLeave(role))await refQuota().child(nk).set(JSON.parse(JSON.stringify(DEFAULT_QUOTA)));}closeModal("emp-modal");}
+function openEmpModal(key){empEditId=key;$("em-err").classList.add("hidden");if(key){var u=usersData[key];if(!u)return;$("emp-modal-title").textContent="แก้ไขข้อมูลพนักงาน";$("em-name").value=u.name||"";$("em-username").value=u.username||"";$("em-password").value=u.password||"";$("em-position").value=u.position||"";$("em-startdate").value=u.startDate||"";$("em-dept").value=u.dept||"steak";$("em-role").value=u.role||"employee";$("em-custom-label").value=u.customRoleLabel||"";$("em-company").value=u.company||"";$("em-telegram").value=u.telegramChatId||"";}else{$("emp-modal-title").textContent="เพิ่มพนักงานใหม่";["em-name","em-username","em-password","em-position","em-startdate","em-custom-label","em-telegram"].forEach(function(id){$(id).value="";});$("em-dept").value="steak";$("em-role").value="employee";$("em-company").value="";}show("emp-modal");}
+async function saveEmployee(){var name=($("em-name").value||"").trim(),username=($("em-username").value||"").trim(),password=($("em-password").value||"").trim(),position=($("em-position").value||"").trim(),startDate=$("em-startdate").value||"",dept=$("em-dept").value||"steak",role=$("em-role").value||"employee",customRoleLabel=($("em-custom-label").value||"").trim(),company=$("em-company").value||"",telegramChatId=($("em-telegram").value||"").trim();if(!name||!username||!password){$("em-err-text").textContent="กรุณากรอกชื่อ Username และรหัสผ่าน";show("em-err");return;}var snap=await refUsers().once("value"),all=snap.val()||{};if(Object.entries(all).filter(function(e){return e[1].username===username&&e[0]!==empEditId;}).length){$("em-err-text").textContent="Username นี้ถูกใช้แล้ว";show("em-err");return;}var data={name:name,username:username,password:password,position:position,startDate:startDate,dept:role==="admin"?null:dept,role:role,avatar:name[0],color:ROLE_COLOR[role]||"#1a1a1a",customRoleLabel:customRoleLabel,company:company,telegramChatId:telegramChatId};if(empEditId){await refUser(empEditId).update(data);}else{var nk=refUsers().push().key;await refUser(nk).set(data);if(canLeave(role))await refQuota().child(nk).set(JSON.parse(JSON.stringify(DEFAULT_QUOTA)));}closeModal("emp-modal");}
 function changeRole(key,newRole){refUser(key).update({role:newRole,color:ROLE_COLOR[newRole]||"#1a1a1a"});}
 function openDelModal(key,name){delTargetId=key;$("del-emp-name").textContent=name;show("del-modal");}
 async function confirmDelete(){if(!delTargetId)return;await refUser(delTargetId).remove();closeModal("del-modal");delTargetId=null;}
@@ -1100,7 +1158,7 @@ function renderCompHolidayFields(key){
     }).join("");
     return "<div><div style='font-size:12px;font-weight:600;color:#888;margin-bottom:6px'>ปี "+year+"</div><div style='display:flex;flex-direction:column;gap:6px'>"+rows+"</div></div>";
   }
-  $("comp-holiday-fields").innerHTML=block(2568,H2568)+block(2569,H2569);
+  $("comp-holiday-fields").innerHTML=getHolidayYears().map(function(y){return block(y,getYearHolidays(y));}).join("");
   $("comp-select-all").disabled=unlimited;$("comp-deselect-all").disabled=unlimited;
   $("comp-select-all").style.opacity=unlimited?"0.5":"1";$("comp-deselect-all").style.opacity=unlimited?"0.5":"1";
 }
@@ -1140,6 +1198,125 @@ async function saveApprover(){
   var supId=$("appr-sup").value||null,mgrId=$("appr-mgr").value||null;
   await refUser(approverEditId).update({approverSupId:supId,approverMgrId:mgrId});
   closeModal("approver-modal");
+}
+
+/* ── Telegram notifications ── */
+function openTelegramSettingsModal(){
+  var s=telegramSettings||{};
+  $("tg-token").value=s.botToken||"";
+  $("tg-chatid").value=s.chatId||"";
+  $("tg-enabled").checked=s.enabled!==false&&!!(s.botToken&&s.chatId);
+  $("tg-test-result").textContent="";
+  show("telegram-modal");
+}
+async function saveTelegramSettings(){
+  var botToken=($("tg-token").value||"").trim(),chatId=($("tg-chatid").value||"").trim(),enabled=$("tg-enabled").checked;
+  await db.ref(bPath("settings/telegram")).set({botToken:botToken,chatId:chatId,enabled:enabled});
+  closeModal("telegram-modal");
+}
+async function sendTelegramMessage(text,overrideChatId){
+  var s=telegramSettings;
+  if(!s||!s.enabled||!s.botToken)return;
+  var chatId=overrideChatId||s.chatId;
+  if(!chatId)return;
+  try{
+    await fetch("https://api.telegram.org/bot"+s.botToken+"/sendMessage",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({chat_id:chatId,text:text,parse_mode:"HTML"})
+    });
+  }catch(e){console.warn("Telegram notify failed:",e);}
+}
+async function testTelegram(){
+  var botToken=($("tg-token").value||"").trim(),chatId=($("tg-chatid").value||"").trim();
+  if(!botToken||!chatId){$("tg-test-result").innerHTML="<span style='color:#991b1b'>กรุณากรอก Bot Token และ Chat ID ก่อน</span>";return;}
+  $("tg-test-result").innerHTML="<span style='color:#888'>กำลังทดสอบ...</span>";
+  try{
+    var res=await fetch("https://api.telegram.org/bot"+botToken+"/sendMessage",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({chat_id:chatId,text:"🔔 ทดสอบการแจ้งเตือนจากระบบใบลา Farm Chokchai — ตั้งค่าสำเร็จ!"})
+    });
+    var data=await res.json();
+    $("tg-test-result").innerHTML=data.ok?"<span style='color:#166534'>✅ ส่งสำเร็จ! ตรวจสอบข้อความในแชท/กลุ่มได้เลย</span>":"<span style='color:#991b1b'>✕ ส่งไม่สำเร็จ: "+(data.description||"ไม่ทราบสาเหตุ")+"</span>";
+  }catch(e){$("tg-test-result").innerHTML="<span style='color:#991b1b'>✕ เกิดข้อผิดพลาด (เช็คการเชื่อมต่อเน็ต)</span>";}
+}
+function notifyLeaveSubmitted(rec,status){
+  var lines=["📝 <b>ใบลาใหม่</b>","👤 "+rec.employee+" ("+((DEPTS[rec.dept]&&DEPTS[rec.dept].label)||rec.dept||"")+")","📋 "+getTypeLabelFull(rec.type,rec.subtype)+(rec.sublabel?" — "+rec.sublabel:""),"📅 "+rec.from+(rec.to&&rec.to!==rec.from?" ถึง "+rec.to:"")+" ("+rec.days+" "+(rec.daysUnit||"วัน")+")"];
+  if(rec.note)lines.push("💬 "+rec.note);
+  lines.push(status==="pending"?"⏳ รอการเห็นชอบจากหัวหน้างาน":"✅ ผ่านหัวหน้างานแล้ว รออนุมัติขั้นสุดท้าย");
+  var text=lines.join("\n");
+  var eu=usersData[rec.userId],recipientChatIds=[];
+  if(status==="pending"){
+    var a=getSupervisorAssignment(eu);
+    if(a.mode==="assigned"){var su=usersData[a.id];if(su&&su.telegramChatId)recipientChatIds.push(su.telegramChatId);}
+    else if(a.mode==="auto"){getAllUsers().filter(function(x){return x.role==="supervisor"&&x.dept===rec.dept&&x._key!==rec.userId&&x.telegramChatId;}).forEach(function(x){recipientChatIds.push(x.telegramChatId);});}
+  }else if(status==="supervisor_approved"){
+    if(eu&&eu.approverMgrId){var mu=usersData[eu.approverMgrId];if(mu&&mu.telegramChatId)recipientChatIds.push(mu.telegramChatId);}
+    else{var myLv=getRoleLevel(rec.userRole||"employee");getAllUsers().filter(function(x){return getRoleLevel(x.role)>myLv&&x.role!=="admin"&&x.dept===rec.dept&&x.telegramChatId;}).forEach(function(x){recipientChatIds.push(x.telegramChatId);});}
+  }
+  sendTelegramMessage(text);
+  recipientChatIds.forEach(function(cid){sendTelegramMessage(text,cid);});
+}
+
+/* ── Manage comp-holiday calendar (admin) ── */
+var holidayEditYear=null,holidayEditDate=null,adminHolidayYearState=null;
+function ensureYearHolidaysCopy(year){
+  var custom=holidaysData[year];
+  if(custom)return Object.assign({},custom);
+  var obj={};getYearHolidays(year).forEach(function(h){obj[h.date]={day:h.day,name:h.name};});
+  return obj;
+}
+function renderAdminHolidays(){
+  var years=getHolidayYears();
+  if(adminHolidayYearState===null||years.indexOf(adminHolidayYearState)===-1)adminHolidayYearState=years[years.length-1];
+  $("admin-holidays-years").innerHTML=years.map(function(y){return "<button class='subtab"+(y===adminHolidayYearState?" active":"")+"' onclick=\"selectHolidayYear("+y+")\">ปี "+y+"</button>";}).join("");
+  var y=adminHolidayYearState,list=getYearHolidays(y);
+  var rows=list.map(function(h){
+    var p=h.date.split("-");
+    return "<div style='display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;border-radius:8px;border:1px solid #eee;background:#fafafa'><div style='font-size:13px'><strong>"+h.name+"</strong><span style='color:#999;margin-left:8px'>"+h.day+" "+parseInt(p[2])+" "+MONTHS[parseInt(p[1])]+" "+y+"</span></div><div style='display:flex;gap:6px'><button class='btn-edit' onclick=\"openHolidayModal("+y+",'"+h.date+"')\">✏️</button><button class='btn-del' onclick=\"deleteHolidayEntry("+y+",'"+h.date+"')\">🗑️</button></div></div>";
+  }).join("")||"<p style='color:#bbb;font-size:12.5px;padding:8px 0'>ยังไม่มีวันหยุดในปีนี้</p>";
+  $("admin-holidays-list").innerHTML="<div class='table-card' style='padding:16px'><div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px'><strong style='font-size:15px'>ปี "+y+" ("+list.length+" วัน)</strong><button onclick=\"openHolidayModal("+y+",null)\" style='padding:7px 12px;border-radius:8px;border:1.5px solid #d1fae5;background:#f0fdf4;color:#166534;font-size:12px;font-weight:600;cursor:pointer'>+ เพิ่มวันหยุด</button></div><div style='display:flex;flex-direction:column;gap:6px'>"+rows+"</div></div>";
+}
+function selectHolidayYear(y){adminHolidayYearState=y;renderAdminHolidays();}
+function openHolidayModal(year,date){
+  holidayEditYear=year;holidayEditDate=date;
+  $("hd-err").classList.add("hidden");
+  if(date){
+    var h=getYearHolidays(year).filter(function(x){return x.date===date;})[0];
+    if(!h)return;
+    var p=date.split("-");
+    $("holiday-modal-title").textContent="แก้ไขวันหยุด";
+    $("hd-name").value=h.name;$("hd-day").value=parseInt(p[2]);$("hd-month").value=String(parseInt(p[1]));$("hd-weekday").value=h.day;
+  }else{
+    $("holiday-modal-title").textContent="เพิ่มวันหยุดใหม่ — ปี "+year;
+    $("hd-name").value="";$("hd-day").value="";$("hd-month").value="1";$("hd-weekday").value="จันทร์";
+  }
+  show("holiday-modal");
+}
+async function saveHolidayEntry(){
+  var name=($("hd-name").value||"").trim(),day=parseInt($("hd-day").value),month=parseInt($("hd-month").value),weekday=$("hd-weekday").value;
+  if(!name||!day||day<1||day>31){$("hd-err-text").textContent="กรุณากรอกชื่อวันหยุดและวันที่ให้ถูกต้อง";show("hd-err");return;}
+  var year=holidayEditYear;
+  var dateStr=year+"-"+String(month).padStart(2,"0")+"-"+String(day).padStart(2,"0");
+  var obj=ensureYearHolidaysCopy(year);
+  if(holidayEditDate&&holidayEditDate!==dateStr)delete obj[holidayEditDate];
+  obj[dateStr]={day:weekday,name:name};
+  await db.ref(bPath("holidays/"+year)).set(obj);
+  closeModal("holiday-modal");
+}
+async function deleteHolidayEntry(year,date){
+  if(!confirm("ลบวันหยุดนี้?"))return;
+  var obj=ensureYearHolidaysCopy(year);
+  delete obj[date];
+  await db.ref(bPath("holidays/"+year)).set(obj);
+}
+function addHolidayYear(){
+  var y=prompt("ระบุปี พ.ศ. ของปีที่ต้องการเพิ่ม เช่น 2570");
+  if(!y)return;
+  y=parseInt(y);
+  if(!y||y<2500||y>2700){alert("กรุณาระบุปีให้ถูกต้อง");return;}
+  if(getHolidayYears().indexOf(y)!==-1){alert("มีปีนี้อยู่แล้ว");return;}
+  adminHolidayYearState=y;
+  openHolidayModal(y,null);
 }
 
 /* ── Sync quota ── */
