@@ -1268,7 +1268,7 @@ function ensureYearHolidaysCopy(year){
 function renderAdminHolidays(){
   var years=getHolidayYears();
   if(adminHolidayYearState===null||years.indexOf(adminHolidayYearState)===-1)adminHolidayYearState=years[years.length-1];
-  $("admin-holidays-years").innerHTML=years.map(function(y){return "<button class='subtab"+(y===adminHolidayYearState?" active":"")+"' onclick=\"selectHolidayYear("+y+")\">ปี "+y+"</button>";}).join("");
+  $("admin-holidays-years").innerHTML=years.map(function(y){return "<button class='subtab"+(y===adminHolidayYearState?" active":"")+"' onclick=\"adminSelectHolidayYear("+y+")\">ปี "+y+"</button>";}).join("");
   var y=adminHolidayYearState,list=getYearHolidays(y);
   var rows=list.map(function(h){
     var p=h.date.split("-");
@@ -1276,7 +1276,7 @@ function renderAdminHolidays(){
   }).join("")||"<p style='color:#bbb;font-size:12.5px;padding:8px 0'>ยังไม่มีวันหยุดในปีนี้</p>";
   $("admin-holidays-list").innerHTML="<div class='table-card' style='padding:16px'><div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px'><strong style='font-size:15px'>ปี "+y+" ("+list.length+" วัน)</strong><button onclick=\"openHolidayModal("+y+",null)\" style='padding:7px 12px;border-radius:8px;border:1.5px solid #d1fae5;background:#f0fdf4;color:#166534;font-size:12px;font-weight:600;cursor:pointer'>+ เพิ่มวันหยุด</button></div><div style='display:flex;flex-direction:column;gap:6px'>"+rows+"</div></div>";
 }
-function selectHolidayYear(y){adminHolidayYearState=y;renderAdminHolidays();}
+function adminSelectHolidayYear(y){adminHolidayYearState=y;renderAdminHolidays();}
 function openHolidayModal(year,date){
   holidayEditYear=year;holidayEditDate=date;
   $("hd-err").classList.add("hidden");
