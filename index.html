@@ -1146,7 +1146,7 @@ function switchQuotaTab(tab){
   $("qm-tab-btn-quota").classList.toggle("active",tab==="quota");
   $("qm-tab-btn-comp").classList.toggle("active",tab==="comp");
 }
-function openQuotaModal(key){quotaEditId=key;var u=usersData[key];if(!u)return;switchQuotaTab("quota");$("quota-modal-name").textContent="👤 "+u.name+" · "+(u.position||"");$("quota-fields").innerHTML=TYPES.map(function(t){var qv=getUserQuota(key)[t.id]||{used:0,total:0};return "<div style='display:grid;grid-template-columns:1fr 100px 100px;align-items:center;gap:10px;padding:10px 12px;background:#fafafa;border-radius:10px;border:1px solid #eee'><div style='display:flex;align-items:center;gap:8px'><span>"+t.icon+"</span><span style='font-size:13px'>"+t.label+"</span></div><div><label style='font-size:10px;color:#999;display:block;margin-bottom:3px'>ใช้ไปแล้ว</label><input type='number' id='q-used-"+t.id+"' value='"+qv.used+"' min='0' class='field-input' style='padding:6px;font-size:13px;text-align:center'></div><div><label style='font-size:10px;color:#999;display:block;margin-bottom:3px'>โควต้ารวม</label><input type='number' id='q-total-"+t.id+"' value='"+qv.total+"' min='0' class='field-input' style='padding:6px;font-size:13px;text-align:center'></div></div>";}).join("");renderCompHolidayFields(key);show("quota-modal");}
+function openQuotaModal(key){quotaEditId=key;var u=usersData[key];if(!u)return;switchQuotaTab("quota");$("quota-modal-name").textContent="👤 "+u.name+" · "+(u.position||"");$("quota-fields").innerHTML=TYPES.map(function(t){var qv=getUserQuota(key)[t.id]||{used:0,total:0};return "<div style='display:grid;grid-template-columns:1fr 100px 100px;align-items:center;gap:10px;padding:10px 12px;background:#fafafa;border-radius:10px;border:1px solid #eee'><div style='display:flex;align-items:center;gap:8px'><span>"+t.icon+"</span><span style='font-size:13px'>"+t.label+"</span></div><div><label style='font-size:10px;color:#999;display:block;margin-bottom:3px'>ใช้ไปแล้ว</label><input type='number' id='q-used-"+t.id+"' value='"+qv.used+"' min='0' step='0.5' class='field-input' style='padding:6px;font-size:13px;text-align:center'></div><div><label style='font-size:10px;color:#999;display:block;margin-bottom:3px'>โควต้ารวม</label><input type='number' id='q-total-"+t.id+"' value='"+qv.total+"' min='0' step='0.5' class='field-input' style='padding:6px;font-size:13px;text-align:center'></div></div>";}).join("");renderCompHolidayFields(key);show("quota-modal");}
 var compHolidayYearState=null;
 function renderCompHolidayFields(key){
   var saved=allowedHolidaysData[key]||null;
@@ -1184,7 +1184,7 @@ function toggleCompUnlimited(){
 function selectAllCompHolidays(val){document.querySelectorAll("#comp-year-"+compHolidayYearState+" .comp-holiday-cb").forEach(function(cb){cb.checked=val;styleCompRow(cb.parentNode);});}
 async function saveQuota(){
   if(!quotaEditId)return;
-  var upd={};TYPES.forEach(function(t){upd[t.id]={used:parseInt(($("q-used-"+t.id)||{value:"0"}).value)||0,total:parseInt(($("q-total-"+t.id)||{value:"0"}).value)||0};});
+  var upd={};TYPES.forEach(function(t){upd[t.id]={used:parseFloat(($("q-used-"+t.id)||{value:"0"}).value)||0,total:parseFloat(($("q-total-"+t.id)||{value:"0"}).value)||0};});
   await refQuota().child(quotaEditId).set(upd);
   var unlimited=$("comp-unlimited").checked,compData={_unlimited:unlimited};
   if(!unlimited){document.querySelectorAll(".comp-holiday-cb").forEach(function(cb){if(cb.checked)compData[cb.dataset.date]=true;});}
