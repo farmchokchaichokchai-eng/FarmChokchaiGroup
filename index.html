@@ -820,7 +820,35 @@ document.addEventListener("DOMContentLoaded",function(){
   var iu=$("inp-user"),ip=$("inp-pw");
   if(iu)iu.addEventListener("keydown",function(e){if(e.key==="Enter")doLogin();});
   if(ip)ip.addEventListener("keydown",function(e){if(e.key==="Enter")doLogin();});
+  initSwipeTabs();
 });
+/* ── Swipe left/right to change tabs (touch devices only) ── */
+function initSwipeTabs(){
+  var sx=0,sy=0,st=0,active=false;
+  document.addEventListener("touchstart",function(e){
+    if(e.touches.length!==1)return;
+    if(document.querySelector(".modal-overlay:not(.hidden)")){active=false;return;}
+    var t=e.target;
+    if(t.closest && t.closest('[style*="overflow-x:auto"]')){active=false;return;}
+    if(t.closest && (t.closest("select")||t.closest("input")||t.closest("textarea"))){active=false;return;}
+    sx=e.touches[0].clientX;sy=e.touches[0].clientY;st=Date.now();active=true;
+  },{passive:true});
+  document.addEventListener("touchend",function(e){
+    if(!active)return;active=false;
+    var t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy,dt=Date.now()-st;
+    if(dt>700)return;
+    if(Math.abs(dx)<60||Math.abs(dx)<Math.abs(dy)*1.5)return;
+    var wrap=document.querySelector(".container:not(.hidden) > .tabs");
+    if(!wrap)return;
+    var btns=Array.prototype.slice.call(wrap.querySelectorAll(".tab-btn"));
+    if(!btns.length)return;
+    var idx=btns.findIndex(function(b){return b.classList.contains("active");});
+    if(idx===-1)idx=0;
+    var next=dx<0?idx+1:idx-1;
+    if(next<0||next>=btns.length)return;
+    btns[next].click();
+  },{passive:true});
+}
 function selectBranch(br){
   selectedBranchLogin=br;
   var sf=$("sel-farm"),sh=$("sel-ho");if(!sf||!sh)return;
