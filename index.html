@@ -1079,7 +1079,7 @@ async function submitLeave(prefix){
   var timeRange="";if(timeMode){var de2=$(prefix==="emp"?"f-time-display":prefix+"-f-time-display");if(de2)timeRange=de2.textContent||"";}
   var noteText="";
   if(isDayoff)noteText="ทำงาน "+fmtDate(from)+" → สลับหยุด "+fmtDate(dayoffDate)+(note?" · "+note:"");
-  else if(isComp){var cp=compVal.split("|");noteText="ชดเชย: "+cp[2]+" ("+cp[1]+" "+fmtDate(cp[0])+")"+(note?" · "+note:"");}
+  else if(isComp){var cp=compVal.split("|");var cpP=cp[0].split("-");var cpDateStr=parseInt(cpP[2])+" "+MONTHS[parseInt(cpP[1])]+" "+cpP[0];noteText="ชดเชย: "+cp[2]+" ("+cp[1]+" "+cpDateStr+")"+(note?" · "+note:"");}
   else noteText=pLabel+(note?" "+note:"");
   var toDate=isDayoff?fmtDate(dayoffDate):isComp?fmtDate(from):isHalf?fmtDate(from):fmtDate(to);
   var selfUser=usersData[currentUser._key]||currentUser;
