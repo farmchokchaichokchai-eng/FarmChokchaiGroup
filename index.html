@@ -1109,12 +1109,20 @@ async function submitLeave(prefix){
   if(isDayoff&&!dayoffDate)return;if(isComp&&!compVal)return;
   if(!isDayoff&&!isComp&&!timeMode&&per==="full"&&!to)return;
   var isHalf=!isDayoff&&!isComp&&!timeMode&&per!=="full";
-  if(!timeMode)days=isDayoff||isComp?1:isHalf?0.5:Math.max(1,Math.round((new Date(to)-new Date(from))/86400000)+1);
+  if(!timeMode)days=(isDayoff||isComp)?(per!=="full"?0.5:1):isHalf?0.5:Math.max(1,Math.round((new Date(to)-new Date(from))/86400000)+1);
+  var QUOTA_ENFORCED=["annual","sick","personal","comp","maternity","special"];
+  if(QUOTA_ENFORCED.indexOf(t)!==-1){
+    var uq=getUserQuota(currentUser._key),qv=uq[t]||{used:0,total:0},remaining=qv.total-qv.used;
+    if(days>remaining){
+      alert("⚠️ ไม่สามารถยื่นคำขอลาได้\n\nประเภท: "+getTypeLabelFull(t,sub)+"\nโควต้าคงเหลือ: "+remaining+" วัน\nจำนวนที่ขอลาครั้งนี้: "+days+" วัน\n\nกรุณาติดต่อผู้ดูแลระบบหากต้องการขอเพิ่มโควต้า");
+      return;
+    }
+  }
   var pLabel=per==="am"?" (ครึ่งวันเช้า)":per==="pm"?" (ครึ่งวันบ่าย)":"";
   var timeRange="";if(timeMode){var de2=$(prefix==="emp"?"f-time-display":prefix+"-f-time-display");if(de2)timeRange=de2.textContent||"";}
   var noteText="";
-  if(isDayoff)noteText="ทำงาน "+fmtDate(from)+" → สลับหยุด "+fmtDate(dayoffDate)+(note?" · "+note:"");
-  else if(isComp){var cp=compVal.split("|");var cpP=cp[0].split("-");var cpDateStr=parseInt(cpP[2])+" "+MONTHS[parseInt(cpP[1])]+" "+cpP[0];noteText="ชดเชย: "+cp[2]+" ("+cp[1]+" "+cpDateStr+")"+(note?" · "+note:"");}
+  if(isDayoff)noteText="ทำงาน "+fmtDate(from)+" → สลับหยุด "+fmtDate(dayoffDate)+pLabel+(note?" · "+note:"");
+  else if(isComp){var cp=compVal.split("|");var cpP=cp[0].split("-");var cpDateStr=parseInt(cpP[2])+" "+MONTHS[parseInt(cpP[1])]+" "+cpP[0];noteText="ชดเชย: "+cp[2]+" ("+cp[1]+" "+cpDateStr+")"+pLabel+(note?" · "+note:"");}
   else noteText=pLabel+(note?" "+note:"");
   var toDate=isDayoff?fmtDate(dayoffDate):isComp?fmtDate(from):isHalf?fmtDate(from):fmtDate(to);
   var selfUser=usersData[currentUser._key]||currentUser;
