@@ -1114,7 +1114,7 @@ async function submitLeave(prefix){
   if(QUOTA_ENFORCED.indexOf(t)!==-1){
     var uq=getUserQuota(currentUser._key),qv=uq[t]||{used:0,total:0},remaining=qv.total-qv.used;
     if(days>remaining){
-      alert("⚠️ ไม่สามารถยื่นคำขอลาได้\n\nประเภท: "+getTypeLabelFull(t,sub)+"\nโควต้าคงเหลือ: "+remaining+" วัน\nจำนวนที่ขอลาครั้งนี้: "+days+" วัน\n\nกรุณาติดต่อผู้ดูแลระบบหากต้องการขอเพิ่มโควต้า");
+      alert("⚠️ ไม่สามารถยื่นคำขอลาได้\n\nประเภท: "+getTypeLabelFull(t,sub)+"\nโควต้าคงเหลือ: "+remaining+" วัน\nจำนวนที่ขอลาครั้งนี้: "+days+" วัน\n\nวันลาของคุณใช้งานหมดแล้ว");
       return;
     }
   }
