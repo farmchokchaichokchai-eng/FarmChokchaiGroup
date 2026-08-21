@@ -622,6 +622,7 @@ header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-inde
       <button id="ld-btn-approve" class="btn-approve hidden" onclick="ldApprove()">✓ อนุมัติ</button>
       <button id="ld-btn-reject" class="btn-confirm-reject" style="padding:8px 16px;border-radius:8px" onclick="ldOpenReject()">✕ ปฏิเสธ</button>
       <button id="ld-btn-edit" class="btn-cancel hidden" style="border-color:#bfdbfe;color:#1e40af" onclick="ldEdit()">✏️ แก้ไข</button>
+      <button id="ld-btn-delete" class="btn-confirm-reject hidden" style="padding:8px 16px;border-radius:8px" onclick="ldDelete()">🗑️ ลบ</button>
     </div>
     <div class="modal-actions"><button class="btn-cancel" onclick="closeModal('leave-detail-modal')">ปิด</button></div>
   </div>
@@ -823,15 +824,23 @@ function openLeaveDetail(item,mode){
   var eu=usersData[item.userId],ci=eu&&eu.company?COMPANIES[eu.company]:null;
   var rows=[["ชื่อพนักงาน",item.employee],["ฝ่าย",(DEPTS[item.dept]&&DEPTS[item.dept].label)||"—"],ci?["บริษัท",ci.label]:null,["ประเภทการลา",item.label+(item.sublabel?" ("+item.sublabel+")":"")],["วันที่เริ่มต้น",item.from],(item.to&&item.to!==item.from)?["วันที่สิ้นสุด",item.to]:null,["จำนวน",item.days+" "+(item.daysUnit||"วัน")],item.timeRange?["ช่วงเวลา","⏰ "+item.timeRange]:null,item.note?["หมายเหตุ",item.note]:null,item.supervisorName?["หัวหน้างาน",item.supervisorName]:null,item.adminNote?["บันทึก Admin",item.adminNote]:null].filter(Boolean);
   $("ld-body").innerHTML=rows.map(function(r){return "<div class='detail-row'><span class='detail-label'>"+r[0]+"</span><span class='detail-value'>"+r[1]+"</span></div>";}).join("");
-  var aw=$("ld-approve-actions");hide("ld-btn-consent");hide("ld-btn-approve");hide("ld-btn-edit");
+  var aw=$("ld-approve-actions");hide("ld-btn-consent");hide("ld-btn-approve");hide("ld-btn-edit");hide("ld-btn-delete");show("ld-btn-reject");
   if(mode==="supervisor"&&item.status==="pending"){aw.classList.remove("hidden");show("ld-btn-consent");}
   else if(mode==="approve"&&item.status==="supervisor_approved"){aw.classList.remove("hidden");show("ld-btn-approve");}
+  else if(mode==="admin"&&item.status==="cancelled"){aw.classList.remove("hidden");hide("ld-btn-reject");show("ld-btn-delete");}
   else if(mode==="admin"){aw.classList.remove("hidden");if(item.status==="pending"||item.status==="supervisor_approved")show("ld-btn-approve");show("ld-btn-edit");}
   else aw.classList.add("hidden");
   show("leave-detail-modal");
 }
 async function ldConsent(){if(!ldCurrentItem)return;var note=prompt("บันทึกหัวหน้างาน (ถ้ามี):","");await refHistory().child(ldCurrentItem._key).update({status:"supervisor_approved",supervisorId:currentUser._key,supervisorName:currentUser.name,supervisorNote:note||""});closeModal("leave-detail-modal");}
 async function ldApprove(){if(!ldCurrentItem)return;await approveItem(ldCurrentItem._key,ldCurrentItem.userId,ldCurrentItem.quotaKey||ldCurrentItem.type,ldCurrentItem.days,ldCurrentItem.daysUnit);closeModal("leave-detail-modal");}
+async function ldDelete(){if(!ldCurrentItem)return;await deleteLeaveRequest(ldCurrentItem._key);closeModal("leave-detail-modal");}
+async function deleteLeaveRequest(key){
+  var h=historyData[key];
+  if(!h||h.status!=="cancelled"){alert("ลบได้เฉพาะคำขอที่มีสถานะ \"ยกเลิก\" เท่านั้น");return;}
+  if(!confirm("ลบคำขอลานี้ถาวร? การกระทำนี้ไม่สามารถย้อนกลับได้"))return;
+  await refHistory().child(key).remove();
+}
 function ldOpenReject(){if(!ldCurrentItem)return;closeModal("leave-detail-modal");rejectTargetId=ldCurrentItem._key;$("reject-modal-title").textContent=ldMode==="supervisor"?"ยืนยันไม่เห็นชอบ":"ยืนยันการปฏิเสธ";$("reject-note").value="";show("reject-modal");}
 function ldEdit(){if(!ldCurrentItem)return;closeModal("leave-detail-modal");openCancelModal(ldCurrentItem._key);}
 
@@ -1189,6 +1198,7 @@ function renderRows(filtered,mode){
     if(mode==="supervisor"&&item.status==="pending"){actions="<button class='btn-consent' onclick='event.stopPropagation();consentItem(\""+item._key+"\")'>👁️ เห็นชอบ</button> <button class='btn-reject-sm' onclick='event.stopPropagation();openRejectItem(\""+item._key+"\",\"not_consent\")'>✕</button>";}
     else if(mode==="manager"&&item.status==="pending"){actions="<button class='btn-consent' onclick='event.stopPropagation();consentItem(\""+item._key+"\")'>👁️ เห็นชอบ</button> <button class='btn-reject-sm' onclick='event.stopPropagation();openRejectItem(\""+item._key+"\",\"not_consent\")'>✕</button>";}
     else if(mode==="manager"&&item.status==="supervisor_approved"){actions="<button class='btn-approve' onclick='event.stopPropagation();approveItemDirect(\""+item._key+"\",\""+item.userId+"\",\""+(item.quotaKey||item.type)+"\","+item.days+",\""+(item.daysUnit||"วัน")+"\")'>✓</button> <button class='btn-reject-sm' onclick='event.stopPropagation();openRejectItem(\""+item._key+"\",\"reject\")'>✕</button>";}
+    else if(mode==="admin"&&item.status==="cancelled"){actions="<button class='btn-del' onclick='event.stopPropagation();deleteLeaveRequest(\""+item._key+"\")'>🗑️ ลบ</button>";}
     else if(mode==="admin"){if(item.status==="pending"||item.status==="supervisor_approved")actions="<button class='btn-approve' onclick='event.stopPropagation();approveItemDirect(\""+item._key+"\",\""+item.userId+"\",\""+(item.quotaKey||item.type)+"\","+item.days+",\""+(item.daysUnit||"วัน")+"\")'>✓</button> ";actions+="<button class='btn-reject-sm' onclick='event.stopPropagation();openRejectItem(\""+item._key+"\",\"reject\")'>✕</button> <button class='btn-edit' style='border-color:#bfdbfe;color:#1e40af' onclick='event.stopPropagation();openCancelModal(\""+item._key+"\")'>✏️</button>";}
     else actions=statusBadge(item.status);
     return "<div class='row' onclick='openLeaveDetail("+JSON.stringify(item).replace(/'/g,"\\'").replace(/</g,"\\u003c")+",\""+modeStr+"\")' style='"+(isLast?"border-bottom:none":"")+"'><div class='row-icon'>"+typeIcon(dt)+"</div><div class='row-info'><div class='row-title'><strong style='font-size:13px;font-weight:600'>"+item.employee+"</strong>"+(mode==="admin"||mode==="supervisor"?deptPill(item.dept):"")+compTag+typeBadge(dt,item.days,item.daysUnit)+"</div><div class='row-sub'>"+item.label+(item.sublabel?" · <em>"+item.sublabel+"</em>":"")+" · "+item.from+(item.days>1&&item.from!==item.to?" — "+item.to:"")+(item.timeRange?" · ⏰ "+item.timeRange:"")+(item.supervisorName?" · 👁️ "+item.supervisorName:"")+"</div></div><div style='display:flex;align-items:center;gap:6px;flex-shrink:0'>"+actions+"</div></div>";
