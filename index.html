@@ -425,7 +425,7 @@ header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-inde
               <option value="CRR">CRR</option><option value="CEC">CEC</option><option value="CDF">CDF</option>
               <option value="CFR">CFR</option><option value="CFP">CFP</option><option value="CIC">CIC</option>
             </select>
-            <button onclick="exportExcel()" style="padding:8px 12px;border-radius:8px;border:1.5px solid #d1fae5;background:#f0fdf4;color:#166534;font-size:12px;font-weight:600;cursor:pointer">⬇️ Excel</button>
+            <button onclick="openExportExcelModal()" style="padding:8px 12px;border-radius:8px;border:1.5px solid #d1fae5;background:#f0fdf4;color:#166534;font-size:12px;font-weight:600;cursor:pointer">⬇️ Excel</button>
             <button onclick="openTigerSoftModal()" style="padding:8px 12px;border-radius:8px;border:1.5px solid #ddd6fe;background:#f5f3ff;color:#5b21b6;font-size:12px;font-weight:600;cursor:pointer">🐯 TigerSoft</button>
             <button onclick="openTelegramSettingsModal()" style="padding:8px 12px;border-radius:8px;border:1.5px solid #bfdbfe;background:#eff6ff;color:#1e40af;font-size:12px;font-weight:600;cursor:pointer">🔔 แจ้งเตือน Telegram</button>
           </div>
@@ -569,6 +569,16 @@ header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-inde
       <div id="hd-err" class="error-msg hidden"><span>⚠️</span><span id="hd-err-text"></span></div>
     </div>
     <div class="modal-actions"><button class="btn-cancel" onclick="closeModal('holiday-modal')">ยกเลิก</button><button class="btn-confirm" onclick="saveHolidayEntry()">บันทึก</button></div>
+  </div>
+</div>
+<div id="export-excel-modal" class="modal-overlay hidden">
+  <div class="modal" style="max-width:380px"><h3>⬇️ Export Excel</h3>
+    <p style="font-size:11.5px;color:#999;margin-bottom:14px">เลือกช่วงวันที่ (ดูจากวันที่เริ่มลา) — เว้นว่างไว้ถ้าต้องการ export ทั้งหมด</p>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div><label class="field-label">ตั้งแต่วันที่</label><input id="exp-from" type="date" class="field-input"></div>
+      <div><label class="field-label">ถึงวันที่</label><input id="exp-to" type="date" class="field-input"></div>
+    </div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeModal('export-excel-modal')">ยกเลิก</button><button class="btn-confirm" onclick="confirmExportExcel()">⬇️ Export</button></div>
   </div>
 </div>
 <div id="time-picker-modal" class="modal-overlay hidden">
@@ -1114,7 +1124,7 @@ async function submitLeave(prefix){
   if(QUOTA_ENFORCED.indexOf(t)!==-1){
     var uq=getUserQuota(currentUser._key),qv=uq[t]||{used:0,total:0},remaining=qv.total-qv.used;
     if(days>remaining){
-      alert("⚠️ ไม่สามารถยื่นคำขอลาได้\n\nประเภท: "+getTypeLabelFull(t,sub)+"\nโควต้าคงเหลือ: "+remaining+" วัน\nจำนวนที่ขอลาครั้งนี้: "+days+" วัน\n\nวันลาของคุณใช้งานหมดแล้ว");
+      alert("⚠️ ไม่สามารถยื่นคำขอลาได้\n\nประเภท: "+getTypeLabelFull(t,sub)+"\nโควต้าคงเหลือ: "+remaining+" วัน\nจำนวนที่ขอลาครั้งนี้: "+days+" วัน\n\nกรุณาติดต่อผู้ดูแลระบบหากต้องการขอเพิ่มโควต้า");
       return;
     }
   }
@@ -1432,7 +1442,13 @@ function importExcel(e){var file=e.target.files[0];if(!file)return;var reader=ne
 async function confirmImport(){var toImport=importRows.filter(function(r){return r.status==="ok";});if(!toImport.length){alert("ไม่มีรายการที่นำเข้าได้");return;}var btn=$("btn-confirm-import");btn.disabled=true;btn.textContent="กำลังนำเข้า...";var uUpd={},qUpd={};toImport.forEach(function(u){var key=refUsers().push().key;uUpd[key]={name:u.name,username:u.username,password:u.password,position:u.position,startDate:u.startDate,dept:u.role==="admin"?null:u.dept,role:u.role,company:u.company||"",avatar:u.name[0],color:ROLE_COLOR[u.role]||"#1a1a1a"};if(canLeave(u.role))qUpd[key]=JSON.parse(JSON.stringify(DEFAULT_QUOTA));});await refUsers().update(uUpd);if(Object.keys(qUpd).length)await refQuota().update(qUpd);cancelImport();btn.disabled=false;btn.textContent="นำเข้าทั้งหมด";alert("✅ นำเข้าสำเร็จ "+toImport.length+" รายการ");}
 function cancelImport(){importRows=[];hide("import-preview");$("import-tbody").innerHTML="";}
 
-function exportExcel(){var search=($("admin-search")||{value:""}).value||"";var filtered=getHistory().filter(function(h){return (adminLeaveTabState==="all"||h.status===adminLeaveTabState)&&(h.employee.includes(search)||h.label.includes(search));});var sL={approved:"อนุมัติแล้ว",pending:"รออนุมัติ",supervisor_approved:"ผ่านหัวหน้างาน",rejected:"ไม่อนุมัติ",cancelled:"ยกเลิก"};var headers=["ชื่อพนักงาน","ฝ่าย","บริษัท","ประเภทการลา","รายละเอียด","วันที่เริ่มต้น","วันที่สิ้นสุด","จำนวนวัน","สถานะ","หัวหน้างาน","หมายเหตุ"];var rows=filtered.map(function(h){var eu=usersData[h.userId],comp=eu&&eu.company&&COMPANIES[eu.company]?COMPANIES[eu.company].label:"";return [h.employee,(DEPTS[h.dept]&&DEPTS[h.dept].label)||"",comp,h.label,h.sublabel||"",h.from,h.to,h.days,sL[h.status]||"",h.supervisorName||"",h.note||""];});dlFile("\uFEFF"+[headers].concat(rows).map(function(r){return r.map(function(c){return "\""+String(c).replace(/"/g,"\"\"")+"\"";}).join(",");}).join("\r\n"),"text/csv","LeaveOS_"+currentBranch.toUpperCase()+"_"+stamp()+".csv");}
+function openExportExcelModal(){$("exp-from").value="";$("exp-to").value="";show("export-excel-modal");}
+function confirmExportExcel(){
+  var fromDate=$("exp-from").value||"",toDate=$("exp-to").value||"";
+  closeModal("export-excel-modal");
+  exportExcel(fromDate,toDate);
+}
+function exportExcel(fromDate,toDate){var search=($("admin-search")||{value:""}).value||"";var filtered=getHistory().filter(function(h){var inTab=(adminLeaveTabState==="all"||h.status===adminLeaveTabState)&&(h.employee.includes(search)||h.label.includes(search));if(!inTab)return false;if(fromDate&&h.from<fromDate)return false;if(toDate&&h.from>toDate)return false;return true;});var sL={approved:"อนุมัติแล้ว",pending:"รออนุมัติ",supervisor_approved:"ผ่านหัวหน้างาน",rejected:"ไม่อนุมัติ",cancelled:"ยกเลิก"};var headers=["ชื่อพนักงาน","ฝ่าย","บริษัท","ประเภทการลา","รายละเอียด","วันที่เริ่มต้น","วันที่สิ้นสุด","จำนวนวัน","สถานะ","หัวหน้างาน","หมายเหตุ"];var rows=filtered.map(function(h){var eu=usersData[h.userId],comp=eu&&eu.company&&COMPANIES[eu.company]?COMPANIES[eu.company].label:"";return [h.employee,(DEPTS[h.dept]&&DEPTS[h.dept].label)||"",comp,h.label,h.sublabel||"",h.from,h.to,h.days,sL[h.status]||"",h.supervisorName||"",h.note||""];});var suffix=(fromDate||toDate)?"_"+(fromDate||"start")+"_to_"+(toDate||"end"):"";dlFile("\uFEFF"+[headers].concat(rows).map(function(r){return r.map(function(c){return "\""+String(c).replace(/"/g,"\"\"")+"\"";}).join(",");}).join("\r\n"),"text/csv","LeaveOS_"+currentBranch.toUpperCase()+suffix+"_"+stamp()+".csv");}
 
 function openTigerSoftModal(){$("ts-company").value="";$("ts-type").value="";$("ts-date-from").value="";$("ts-date-to").value="";$("ts-search").value="";updateTSPreview();show("tigersoft-modal");}
 function filterTigerSoft(){var company=$("ts-company").value||"",type=$("ts-type").value||"",dateFrom=$("ts-date-from").value||"",dateTo=$("ts-date-to").value||"",search=($("ts-search").value||"").trim();var thM={"ม.ค.":"01","ก.พ.":"02","มี.ค.":"03","เม.ย.":"04","พ.ค.":"05","มิ.ย.":"06","ก.ค.":"07","ส.ค.":"08","ก.ย.":"09","ต.ค.":"10","พ.ย.":"11","ธ.ค.":"12"};function thISO(str){if(!str)return "";var p=str.trim().split(" ");if(p.length<3)return "";var d=p[0].padStart(2,"0"),m=thM[p[1]]||"01",y=parseInt(p[2]);if(y>2400)y-=543;return y+"-"+m+"-"+d;}return getHistory().filter(function(h){if(h.status!=="approved")return false;if(company){var eu=usersData[h.userId];if(!eu||eu.company!==company)return false;}if(type){if(type==="sick_cert"){if(h.subtype!=="sick_cert")return false;}else if(type==="sick_no_cert"){if(h.subtype!=="sick_no_cert")return false;}else{if(h.type!==type)return false;}}if(dateFrom||dateTo){var iso=thISO(h.from);if(dateFrom&&iso&&iso<dateFrom)return false;if(dateTo&&iso&&iso>dateTo)return false;}if(search&&!h.employee.includes(search))return false;return true;});}
