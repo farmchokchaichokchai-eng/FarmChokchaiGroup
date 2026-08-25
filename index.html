@@ -750,7 +750,7 @@ function refreshViews(){
 }
 
 /* ── Holiday dropdown ── */
-function getUsedCompDates(uid){var used=new Set();getHistory().forEach(function(h){if(h.userId===uid&&h.type==="comp"&&(h.status==="pending"||h.status==="supervisor_approved"||h.status==="approved")&&h.compHolidayDate)used.add(h.compHolidayDate);});return used;}
+function getUsedCompDates(uid){var used=new Map();getHistory().forEach(function(h){if(h.userId===uid&&h.type==="comp"&&(h.status==="pending"||h.status==="supervisor_approved"||h.status==="approved")&&h.compHolidayDate){used.set(h.compHolidayDate,(used.get(h.compHolidayDate)||0)+(h.days||1));}});return used;}
 function buildHolidayDropdown(year,selId,uid){
   var oldSel=$(selId);if(!oldSel)return;
   var newSel=document.createElement("select");newSel.id=selId;newSel.className="field-input";
@@ -759,10 +759,10 @@ function buildHolidayDropdown(year,selId,uid){
   var def=document.createElement("option");def.value="";def.textContent="-- เลือก --";newSel.appendChild(def);
   var list=getYearHolidays(year);
   var uid2=uid||(currentUser?currentUser._key:null);
-  var used=uid2?getUsedCompDates(uid2):new Set();
+  var used=uid2?getUsedCompDates(uid2):new Map();
   var allowed=uid2?(allowedHolidaysData[uid2]||null):null;
   var unlimited=!allowed||allowed._unlimited===true;
-  list.forEach(function(h){var p=h.date.split("-"),opt=document.createElement("option");opt.value=h.date+"|"+h.day+"|"+h.name;var lbl=h.name+" — "+h.day+" "+parseInt(p[2])+" "+MONTHS[parseInt(p[1])]+" "+year;var isOk=unlimited||!!(allowed&&allowed[h.date]);var isUsed=used.has(h.date);if(isUsed){opt.disabled=true;opt.textContent="✓ ใช้แล้ว — "+lbl;opt.style.color="#bbb";}else if(!isOk){opt.disabled=true;opt.textContent="🔒 ไม่ได้รับสิทธิ์ — "+lbl;opt.style.color="#bbb";}else opt.textContent=lbl;newSel.appendChild(opt);});
+  list.forEach(function(h){var p=h.date.split("-"),opt=document.createElement("option");opt.value=h.date+"|"+h.day+"|"+h.name;var lbl=h.name+" — "+h.day+" "+parseInt(p[2])+" "+MONTHS[parseInt(p[1])]+" "+year;var isOk=unlimited||!!(allowed&&allowed[h.date]);var usedDays=used.get(h.date)||0;if(usedDays>=1){opt.disabled=true;opt.textContent="✓ ใช้แล้ว — "+lbl;opt.style.color="#bbb";}else if(!isOk){opt.disabled=true;opt.textContent="🔒 ไม่ได้รับสิทธิ์ — "+lbl;opt.style.color="#bbb";}else opt.textContent=(usedDays>0?"🌗 ใช้ไปแล้ว 0.5 วัน (เหลือ 0.5 วัน) — ":"")+lbl;newSel.appendChild(opt);});
   oldSel.parentNode.replaceChild(newSel,oldSel);
 }
 
@@ -1129,6 +1129,14 @@ async function submitLeave(prefix){
   if(!isDayoff&&!isComp&&!timeMode&&per==="full"&&!to)return;
   var isHalf=!isDayoff&&!isComp&&!timeMode&&per!=="full";
   if(!timeMode)days=(isDayoff||isComp)?(per!=="full"?0.5:1):isHalf?0.5:Math.max(1,Math.round((new Date(to)-new Date(from))/86400000)+1);
+  if(isComp&&compVal){
+    var cpDate=compVal.split("|")[0];
+    var usedSoFar=(getUsedCompDates(currentUser._key).get(cpDate))||0;
+    if(usedSoFar+days>1){
+      alert("⚠️ วันหยุดนี้เหลือให้ลาชดเชยได้อีก "+(1-usedSoFar)+" วันเท่านั้น (ใช้ไปแล้ว "+usedSoFar+" วัน)");
+      return;
+    }
+  }
   var QUOTA_ENFORCED=["annual","sick","personal","comp","maternity","special"];
   if(QUOTA_ENFORCED.indexOf(t)!==-1){
     var uq=getUserQuota(currentUser._key),qv=uq[t]||{used:0,total:0},remaining=qv.total-qv.used;
