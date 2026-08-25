@@ -477,8 +477,14 @@ header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-inde
 <div id="cancel-modal" class="modal-overlay hidden">
   <div class="modal"><h3>แก้ไขคำขอลา</h3><p id="cancel-info" style="font-size:13px;color:#777;margin-bottom:16px"></p>
     <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label class="field-label">วันที่เริ่มต้น</label><input id="cancel-from" type="date" class="field-input"></div>
+        <div><label class="field-label">วันที่สิ้นสุด</label><input id="cancel-to" type="date" class="field-input"></div>
+      </div>
+      <div><label class="field-label">จำนวนวัน</label><input id="cancel-days" type="number" min="0.5" step="0.5" class="field-input"></div>
       <div><label class="field-label">สถานะ</label><select id="cancel-status" class="field-input"><option value="pending">รออนุมัติ</option><option value="supervisor_approved">ผ่านหัวหน้างาน</option><option value="approved">อนุมัติแล้ว</option><option value="rejected">ไม่อนุมัติ</option><option value="cancelled">ยกเลิก</option></select></div>
       <div><label class="field-label">หมายเหตุ</label><textarea id="cancel-note" class="field-input" rows="2" style="resize:none"></textarea></div>
+      <p style="font-size:11px;color:#bbb">หมายเหตุ: สำหรับ "สลับวันหยุด" วันที่เริ่มต้น = วันที่ทำงาน, วันที่สิ้นสุด = วันหยุดชดเชย</p>
     </div>
     <div class="modal-actions"><button class="btn-cancel" onclick="closeModal('cancel-modal')">ปิด</button><button class="btn-confirm-reject" onclick="confirmCancel()">บันทึก</button></div>
   </div>
@@ -710,6 +716,16 @@ function show(id){var e=$(id);if(e)e.classList.remove("hidden");}
 function hide(id){var e=$(id);if(e)e.classList.add("hidden");}
 function closeModal(id){hide(id);}
 function fmtDate(iso){try{return new Date(iso).toLocaleDateString("th-TH",{day:"numeric",month:"short",year:"numeric"});}catch(e){return iso;}}
+function parseThaiDate(str){
+  if(!str)return "";
+  var thM={"ม.ค.":1,"ก.พ.":2,"มี.ค.":3,"เม.ย.":4,"พ.ค.":5,"มิ.ย.":6,"ก.ค.":7,"ส.ค.":8,"ก.ย.":9,"ต.ค.":10,"พ.ย.":11,"ธ.ค.":12};
+  var p=str.trim().split(" ");
+  if(p.length<3)return "";
+  var d=parseInt(p[0]),m=thM[p[1]]||1,y=parseInt(p[2]);
+  if(isNaN(d)||isNaN(y))return "";
+  if(y>2400)y-=543;
+  return y+"-"+String(m).padStart(2,"0")+"-"+String(d).padStart(2,"0");
+}
 function isoToday(){return new Date().toISOString().slice(0,10);}
 function stamp(){var n=new Date();return n.getFullYear()+String(n.getMonth()+1).padStart(2,"0")+String(n.getDate()).padStart(2,"0");}
 function calcTenure(s){if(!s)return "";var st=new Date(s),now=new Date(),y=now.getFullYear()-st.getFullYear(),m=now.getMonth()-st.getMonth();if(m<0){y--;m+=12;}return(y>0?(y+" ปี "+(m>0?m+" เดือน":"")):(m>0?m+" เดือน":"น้อยกว่า 1 เดือน")).trim();}
@@ -1217,11 +1233,26 @@ function openRejectItem(key,mode){rejectTargetId=key;$("reject-modal-title").tex
 async function confirmReject(){var note=($("reject-note").value||"").trim();await refHistory().child(rejectTargetId+"/status").set("rejected");if(note)await refHistory().child(rejectTargetId+"/adminNote").set(note);closeModal("reject-modal");rejectTargetId=null;}
 async function approveItem(key,userId,qk,days,unit){await refHistory().child(key+"/status").set("approved");if(unit==="ชั่วโมง")return;var q=getUserQuota(userId),cur=q[qk]||{used:0,total:0};await refQuota().child(userId+"/"+qk+"/used").set((cur.used||0)+Number(days));}
 function approveItemDirect(key,userId,qk,days,unit){approveItem(key,userId,qk,days,unit);}
-function openCancelModal(key){cancelTargetId=key;var item=historyData[key];if(!item)return;$("cancel-info").textContent=item.employee+" · "+item.label+" · "+item.from;$("cancel-status").value=item.status||"pending";$("cancel-note").value=item.adminNote||"";show("cancel-modal");}
+function openCancelModal(key){cancelTargetId=key;var item=historyData[key];if(!item)return;$("cancel-info").textContent=item.employee+" · "+item.label+" · "+item.from;$("cancel-status").value=item.status||"pending";$("cancel-note").value=item.adminNote||"";$("cancel-days").value=item.days||1;$("cancel-from").value=parseThaiDate(item.from);$("cancel-to").value=parseThaiDate(item.to)||parseThaiDate(item.from);show("cancel-modal");}
 async function confirmCancel(){
-  if(!cancelTargetId)return;var ns=$("cancel-status").value,note=($("cancel-note").value||"").trim(),item=historyData[cancelTargetId];var qk=item?(item.quotaKey||item.type):null;
-  if(item&&qk){if(item.status==="approved"&&ns!=="approved"){var q=getUserQuota(item.userId),cur=q[qk]||{used:0,total:0};await refQuota().child(item.userId+"/"+qk+"/used").set(Math.max(0,(cur.used||0)-Number(item.days)));}if(item.status!=="approved"&&ns==="approved"){var q2=getUserQuota(item.userId),cur2=q2[qk]||{used:0,total:0};await refQuota().child(item.userId+"/"+qk+"/used").set((cur2.used||0)+Number(item.days));}}
-  var upd={status:ns};if(note)upd.adminNote=note;await refHistory().child(cancelTargetId).update(upd);closeModal("cancel-modal");cancelTargetId=null;
+  if(!cancelTargetId)return;
+  var ns=$("cancel-status").value,note=($("cancel-note").value||"").trim(),item=historyData[cancelTargetId];
+  if(!item)return;
+  var qk=item.quotaKey||item.type,oldDays=item.days,oldStatus=item.status;
+  var newDays=parseFloat($("cancel-days").value);if(isNaN(newDays)||newDays<=0)newDays=oldDays;
+  var fromISO=$("cancel-from").value,toISO=$("cancel-to").value;
+  var newFrom=fromISO?fmtDate(fromISO):item.from;
+  var newTo=toISO?fmtDate(toISO):(fromISO?newFrom:item.to);
+  if(item.daysUnit!=="ชั่วโมง"){
+    var wasCounted=oldStatus==="approved",willBeCounted=ns==="approved";
+    var q=getUserQuota(item.userId),cur=q[qk]||{used:0,total:0},usedNow=cur.used||0;
+    if(wasCounted&&!willBeCounted)usedNow=Math.max(0,usedNow-Number(oldDays));
+    else if(!wasCounted&&willBeCounted)usedNow=usedNow+Number(newDays);
+    else if(wasCounted&&willBeCounted&&Number(newDays)!==Number(oldDays))usedNow=Math.max(0,usedNow-Number(oldDays)+Number(newDays));
+    if(wasCounted||willBeCounted)await refQuota().child(item.userId+"/"+qk+"/used").set(usedNow);
+  }
+  var upd={status:ns,days:newDays,from:newFrom,to:newTo};if(note)upd.adminNote=note;
+  await refHistory().child(cancelTargetId).update(upd);closeModal("cancel-modal");cancelTargetId=null;
 }
 
 /* ── Employee table ── */
