@@ -222,6 +222,13 @@ header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-inde
           <div id="f-single-date-wrap" class="hidden"><label class="field-label">วันที่ลา</label><input type="date" id="f-single-date" class="field-input" onchange="onDateChange('emp')"></div>
         </div>
         <div id="dayoff-extra" class="hidden" style="margin-bottom:16px"><label class="field-label">วันที่ขอสลับหยุด</label><input type="date" id="f-dayoff" class="field-input" onchange="updateSubmitBtn()"></div>
+        <div id="annual-extra" class="hidden" style="margin-bottom:16px">
+          <label class="field-label">เลือกปีที่ต้องการใช้โควต้าลาพักร้อน</label>
+          <div style="display:flex;gap:10px">
+            <button id="btn-annual-year-68" onclick="selectAnnualYear('emp',2568)" style="flex:1;padding:9px;border-radius:10px;border:1.5px solid #e8e8e8;background:#fff;color:#555;font-size:13px;font-weight:600;cursor:pointer">ปี 2568</button>
+            <button id="btn-annual-year-69" onclick="selectAnnualYear('emp',2569)" style="flex:1;padding:9px;border-radius:10px;border:1.5px solid #1a1a1a;background:#1a1a1a;color:#fff;font-size:13px;font-weight:600;cursor:pointer">ปี 2569</button>
+          </div>
+        </div>
         <div id="comp-extra" class="hidden" style="margin-bottom:16px">
           <label class="field-label">เลือกปี</label>
           <div style="display:flex;gap:10px;margin-bottom:12px">
@@ -278,6 +285,13 @@ header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-inde
           <div id="sup-f-single-date-wrap" class="hidden"><label class="field-label">วันที่ลา</label><input type="date" id="sup-f-single-date" class="field-input" onchange="onDateChange('sup')"></div>
         </div>
         <div id="sup-dayoff-extra" class="hidden" style="margin-bottom:16px"><label class="field-label">วันที่ขอสลับหยุด</label><input type="date" id="sup-f-dayoff" class="field-input" onchange="supUpdateSubmitBtn()"></div>
+        <div id="sup-annual-extra" class="hidden" style="margin-bottom:16px">
+          <label class="field-label">เลือกปีที่ต้องการใช้โควต้าลาพักร้อน</label>
+          <div style="display:flex;gap:10px">
+            <button id="sup-btn-annual-year-68" onclick="selectAnnualYear('sup',2568)" style="flex:1;padding:9px;border-radius:10px;border:1.5px solid #e8e8e8;background:#fff;color:#555;font-size:13px;font-weight:600;cursor:pointer">ปี 2568</button>
+            <button id="sup-btn-annual-year-69" onclick="selectAnnualYear('sup',2569)" style="flex:1;padding:9px;border-radius:10px;border:1.5px solid #1a1a1a;background:#1a1a1a;color:#fff;font-size:13px;font-weight:600;cursor:pointer">ปี 2569</button>
+          </div>
+        </div>
         <div id="sup-comp-extra" class="hidden" style="margin-bottom:16px">
           <label class="field-label">เลือกปี</label>
           <div style="display:flex;gap:10px;margin-bottom:12px">
@@ -349,6 +363,13 @@ header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-inde
           <div id="mgr-f-single-date-wrap" class="hidden"><label class="field-label">วันที่ลา</label><input type="date" id="mgr-f-single-date" class="field-input" onchange="mgrUpdateSubmitBtn()"></div>
         </div>
         <div id="mgr-dayoff-extra" class="hidden" style="margin-bottom:16px"><label class="field-label">วันที่ขอสลับหยุด</label><input type="date" id="mgr-f-dayoff" class="field-input" onchange="mgrUpdateSubmitBtn()"></div>
+        <div id="mgr-annual-extra" class="hidden" style="margin-bottom:16px">
+          <label class="field-label">เลือกปีที่ต้องการใช้โควต้าลาพักร้อน</label>
+          <div style="display:flex;gap:10px">
+            <button id="mgr-btn-annual-year-68" onclick="selectAnnualYear('mgr',2568)" style="flex:1;padding:9px;border-radius:10px;border:1.5px solid #e8e8e8;background:#fff;color:#555;font-size:13px;font-weight:600;cursor:pointer">ปี 2568</button>
+            <button id="mgr-btn-annual-year-69" onclick="selectAnnualYear('mgr',2569)" style="flex:1;padding:9px;border-radius:10px;border:1.5px solid #1a1a1a;background:#1a1a1a;color:#fff;font-size:13px;font-weight:600;cursor:pointer">ปี 2569</button>
+          </div>
+        </div>
         <div id="mgr-comp-extra" class="hidden" style="margin-bottom:16px">
           <label class="field-label">เลือกปี</label>
           <div style="display:flex;gap:10px;margin-bottom:12px">
@@ -426,6 +447,7 @@ header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-inde
               <option value="CFR">CFR</option><option value="CFP">CFP</option><option value="CIC">CIC</option>
             </select>
             <button onclick="openExportExcelModal()" style="padding:8px 12px;border-radius:8px;border:1.5px solid #d1fae5;background:#f0fdf4;color:#166534;font-size:12px;font-weight:600;cursor:pointer">⬇️ Excel</button>
+            <button onclick="exportQuotaReport()" style="padding:8px 12px;border-radius:8px;border:1.5px solid #fde68a;background:#fffbeb;color:#92400e;font-size:12px;font-weight:600;cursor:pointer">📊 Export โควต้า</button>
             <button onclick="openTigerSoftModal()" style="padding:8px 12px;border-radius:8px;border:1.5px solid #ddd6fe;background:#f5f3ff;color:#5b21b6;font-size:12px;font-weight:600;cursor:pointer">🐯 TigerSoft</button>
             <button onclick="openTelegramSettingsModal()" style="padding:8px 12px;border-radius:8px;border:1.5px solid #bfdbfe;background:#eff6ff;color:#1e40af;font-size:12px;font-weight:600;cursor:pointer">🔔 แจ้งเตือน Telegram</button>
           </div>
@@ -522,6 +544,7 @@ header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-inde
       <button class="tab-btn" id="qm-tab-btn-comp" onclick="switchQuotaTab('comp')">🎁 สิทธิ์วันหยุดลาชดเชย</button>
     </div>
     <div id="qm-panel-quota">
+      <div id="quota-annual-block" style="margin-bottom:12px"></div>
       <div id="quota-fields" style="display:flex;flex-direction:column;gap:10px"></div>
     </div>
     <div id="qm-panel-comp" class="hidden">
@@ -704,7 +727,7 @@ var TYPE_CLS={sick_cert:"b-sick",sick_no_cert:"b-sick",sick:"b-sick",personal:"b
 
 /* ── State ── */
 var currentUser=null,selectedBranchLogin="farm";
-var ST={emp:{type:"",sub:"",period:"full",holidayYear:2568},sup:{type:"",sub:"",period:"full",holidayYear:2568},mgr:{type:"",sub:"",period:"full",holidayYear:2568}};
+var ST={emp:{type:"",sub:"",period:"full",holidayYear:2568,annualYear:2569},sup:{type:"",sub:"",period:"full",holidayYear:2568,annualYear:2569},mgr:{type:"",sub:"",period:"full",holidayYear:2568,annualYear:2569}};
 var mgrStatusTabState="supervisor_approved",supStatusTabState="pending",adminLeaveTabState="pending";
 var rejectTargetId=null,cancelTargetId=null,empEditId=null,delTargetId=null,quotaEditId=null;
 var historyData={},quotaData={},usersData={},importRows=[],allowedHolidaysData={},telegramSettings=null;
@@ -731,9 +754,30 @@ function stamp(){var n=new Date();return n.getFullYear()+String(n.getMonth()+1).
 function calcTenure(s){if(!s)return "";var st=new Date(s),now=new Date(),y=now.getFullYear()-st.getFullYear(),m=now.getMonth()-st.getMonth();if(m<0){y--;m+=12;}return(y>0?(y+" ปี "+(m>0?m+" เดือน":"")):(m>0?m+" เดือน":"น้อยกว่า 1 เดือน")).trim();}
 function hasOneYearTenure(startDate){if(!startDate)return true;var oneYearLater=new Date(startDate);oneYearLater.setFullYear(oneYearLater.getFullYear()+1);return new Date()>=oneYearLater;}
 function getAnnualQuotaTotal(startDate){return hasOneYearTenure(startDate)?DEFAULT_QUOTA.annual.total:0;}
+function getCurrentBuddhistYear(){return new Date().getFullYear()+543;}
+function annualYearFromRecord(h){if(h&&h.annualYear)return h.annualYear;var iso=h&&h.from?parseThaiDate(h.from):"";var y=iso?parseInt(iso.split("-")[0]):NaN;return isNaN(y)?getCurrentBuddhistYear():y;}
+function buddhistYearFromISO(iso){if(!iso)return getCurrentBuddhistYear();var y=parseInt(iso.split("-")[0]);return isNaN(y)?getCurrentBuddhistYear():y+543;}
+function getAnnualQuotaYears(uid){
+  var raw=(quotaData[uid]&&quotaData[uid].annual)||{};
+  var ys={};ys[getCurrentBuddhistYear()]=1;
+  getHolidayYears().forEach(function(y){ys[y]=1;});
+  if(!(raw.used!==undefined||raw.total!==undefined)){Object.keys(raw).forEach(function(y){ys[y]=1;});}
+  return Object.keys(ys).map(Number).sort(function(a,b){return a-b;});
+}
+function getAnnualQuotaForYear(uid,year){
+  var raw=(quotaData[uid]&&quotaData[uid].annual)||{};
+  var u=usersData[uid]||{};
+  var defTotal=getAnnualQuotaTotal(u.startDate);
+  var defEligible=hasOneYearTenure(u.startDate);
+  if(raw.used!==undefined||raw.total!==undefined){
+    return year===getCurrentBuddhistYear()?{used:raw.used||0,total:(raw.total!==undefined&&raw.total!==null)?raw.total:defTotal,eligible:raw.eligible!==undefined?!!raw.eligible:defEligible}:{used:0,total:defTotal,eligible:defEligible};
+  }
+  var y=raw[year];
+  return y?{used:y.used||0,total:(y.total!==undefined&&y.total!==null)?y.total:defTotal,eligible:y.eligible!==undefined?!!y.eligible:defEligible}:{used:0,total:defTotal,eligible:defEligible};
+}
 function getAllUsers(){return Object.entries(usersData).map(function(e){return Object.assign({},e[1],{_key:e[0]});});}
 function getHistory(){return Object.entries(historyData).map(function(e){return Object.assign({},e[1],{_key:e[0]});}).sort(function(a,b){return b.createdAt-a.createdAt;});}
-function getUserQuota(uid){var saved=quotaData[uid]||{},def=JSON.parse(JSON.stringify(DEFAULT_QUOTA));Object.keys(def).forEach(function(k){if(saved[k])def[k]={used:saved[k].used||0,total:(saved[k].total!==undefined&&saved[k].total!==null)?saved[k].total:def[k].total};});return def;}
+function getUserQuota(uid,year){var saved=quotaData[uid]||{},def=JSON.parse(JSON.stringify(DEFAULT_QUOTA));var y=year||getCurrentBuddhistYear();Object.keys(def).forEach(function(k){if(k==="annual"){def.annual=getAnnualQuotaForYear(uid,y);return;}if(saved[k])def[k]={used:saved[k].used||0,total:(saved[k].total!==undefined&&saved[k].total!==null)?saved[k].total:def[k].total};});return def;}
 function saveSession(u){try{localStorage.setItem("lOS_u",JSON.stringify(u));}catch(e){}}
 function loadSession(){try{var d=localStorage.getItem("lOS_u");return d?JSON.parse(d):null;}catch(e){return null;}}
 function clearSession(){try{localStorage.removeItem("lOS_u");}catch(e){}}
@@ -812,7 +856,7 @@ function buildTypeButtons(elId,active,onCb){
     var rem=qv.total>0?"เหลือ "+(qv.total-qv.used)+" วัน":"";
     var btn=document.createElement("button");btn.type="button";btn.setAttribute("data-type-id",t.id);
     btn.style.cssText="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 6px;border-radius:12px;cursor:pointer;box-sizing:border-box;width:100%;text-align:center;transition:all .15s;border:1.5px solid "+(a?"#1a1a1a":"#eee")+";background:"+(a?"#1a1a1a":"#fff")+";";
-    btn.innerHTML="<div style='font-size:20px;margin-bottom:6px'>"+t.icon+"</div><div style='font-size:10px;color:"+(a?"#ccc":"#888")+";margin-bottom:2px;line-height:1.3'>"+t.label+"</div>"+(rem?"<div style='font-size:10px;color:"+(a?"#aaa":"#bbb")+"'>"+rem+"</div>":"");
+    btn.innerHTML="<div style='font-size:20px;margin-bottom:6px'>"+t.icon+"</div><div style='font-size:10px;color:"+(a?"#ccc":"#888")+";margin-bottom:2px;line-height:1.3'>"+t.label+"</div>"+(rem?"<div"+(t.id==="annual"?" id='"+prefix+"-annual-rem-label'":"")+" style='font-size:10px;color:"+(a?"#aaa":"#bbb")+"'>"+rem+"</div>":"");
     btn.addEventListener("click",function(){
       wrap.querySelectorAll("button[data-type-id]").forEach(function(b){var isA=b.getAttribute("data-type-id")===t.id;b.style.background=isA?"#1a1a1a":"#fff";b.style.borderColor=isA?"#1a1a1a":"#eee";b.querySelectorAll("div").forEach(function(d,i){d.style.color=isA?(i===0?"#fff":i===1?"#ccc":"#aaa"):(i===0?"":"#888");});});
       if(onCb)onCb(t.id);else if(prefix==="mgr")mgrSelectType(t.id);else if(prefix==="sup")supSelectType(t.id);else selectType(t.id);
@@ -823,7 +867,14 @@ function buildTypeButtons(elId,active,onCb){
 }
 
 /* ── Quota cards ── */
-function buildQuotaCards(q){return TYPES.map(function(t){var qv=q[t.id]||{used:0,total:0},pct=qv.total>0?Math.min(Math.round(qv.used/qv.total*100),100):0;return "<div class='card'><div style='font-size:20px;margin-bottom:8px'>"+t.icon+"</div><div style='font-size:11px;color:#888;margin-bottom:4px'>"+t.label+"</div><div style='display:flex;align-items:baseline;gap:3px;margin-bottom:10px'><span style='font-size:24px;font-weight:700;color:#1a1a1a'>"+qv.used+"</span><span style='font-size:11px;color:#bbb'>/ "+qv.total+"</span></div><div class='progress-track'><div class='progress-bar' style='width:"+pct+"%'></div></div></div>";}).join("");}
+function buildQuotaCards(q,uid){return TYPES.map(function(t){
+  var qv=q[t.id]||{used:0,total:0},pct=qv.total>0?Math.min(Math.round(qv.used/qv.total*100),100):0;
+  if(t.id==="annual"&&uid){
+    var badge=qv.eligible===false?"<span style='font-size:10px;font-weight:600;color:#991b1b;background:#fef2f2;border:1px solid #fecaca;padding:1px 6px;border-radius:20px;margin-bottom:4px;display:inline-block'>🚫 ไม่มีสิทธิ์</span>":"";
+    return "<div class='card'><div style='font-size:20px;margin-bottom:8px'>"+t.icon+"</div><div style='font-size:11px;color:#888;margin-bottom:4px'>"+t.label+"</div>"+badge+"<div style='display:flex;align-items:baseline;gap:3px;margin-bottom:10px'><span style='font-size:24px;font-weight:700;color:#1a1a1a'>"+qv.used+"</span><span style='font-size:11px;color:#bbb'>/ "+qv.total+"</span></div><div class='progress-track'><div class='progress-bar' style='width:"+pct+"%'></div></div></div>";
+  }
+  return "<div class='card'><div style='font-size:20px;margin-bottom:8px'>"+t.icon+"</div><div style='font-size:11px;color:#888;margin-bottom:4px'>"+t.label+"</div><div style='display:flex;align-items:baseline;gap:3px;margin-bottom:10px'><span style='font-size:24px;font-weight:700;color:#1a1a1a'>"+qv.used+"</span><span style='font-size:11px;color:#bbb'>/ "+qv.total+"</span></div><div class='progress-track'><div class='progress-bar' style='width:"+pct+"%'></div></div></div>";
+}).join("");}
 
 /* ── History list ── */
 function buildHistoryList(mine,mode){
@@ -1011,13 +1062,55 @@ function removeSingleDate(prefix){
 }
 function handleTypeSelect(prefix,id,updateFn){
   var pre=prefix==="emp"?"":prefix+"-";
-  var tw=$(pre+"f-to-wrap"),lf=$(pre+"label-from"),de=$(pre+"dayoff-extra"),ce=$(pre+"comp-extra");
+  var tw=$(pre+"f-to-wrap"),lf=$(pre+"label-from"),de=$(pre+"dayoff-extra"),ce=$(pre+"comp-extra"),ae=$(pre+"annual-extra");
   if(!tw||!lf)return;
   tw.removeAttribute("data-dayoff");
+  if(ae)ae.classList.toggle("hidden",id!=="annual");
+  if(id==="annual"){
+    var elgYears=[2568,2569].filter(function(y){var qv=(getUserQuota(currentUser._key,y).annual)||{};return qv.eligible!==false;});
+    if(elgYears.length<=1){
+      if(ae)ae.classList.add("hidden");
+      ST[prefix].annualYear=elgYears.length?elgYears[0]:getCurrentBuddhistYear();
+    }else{
+      setYearBtn(ST[prefix].annualYear||getCurrentBuddhistYear(),pre+"btn-annual-year-68",pre+"btn-annual-year-69");
+      updateAnnualYearButtons(prefix);
+    }
+    var albl=$(prefix+"-annual-rem-label");
+    if(albl){var aqv=getUserQuota(currentUser._key,ST[prefix].annualYear).annual||{used:0,total:0};albl.textContent="เหลือ "+(aqv.total-aqv.used)+" วัน"+(elgYears.length>1?" (ปี "+ST[prefix].annualYear+")":"");}
+  }
   if(id==="dayoff"){lf.textContent="วันที่ทำงาน";tw.style.display="none";tw.setAttribute("data-dayoff","1");if(de)de.classList.remove("hidden");if(ce)ce.classList.add("hidden");var ft=$(pre+"f-to");if(ft)ft.value="";}
   else if(id==="comp"){lf.textContent="วันที่ขอลาชดเชย";tw.style.display="none";if(de)de.classList.add("hidden");if(ce){ce.classList.remove("hidden");buildHolidayDropdown(ST[prefix].holidayYear,pre+"f-comp-holiday");}var ft2=$(pre+"f-to");if(ft2)ft2.value="";}
   else{lf.textContent="วันที่เริ่มต้น";tw.style.display="";if(de)de.classList.add("hidden");if(ce)ce.classList.add("hidden");var fd=$(pre+"f-dayoff");if(fd)fd.value="";}
   if(updateFn)updateFn();
+}
+function selectAnnualYear(prefix,y){
+  var qv0=(getUserQuota(currentUser._key,y).annual)||{};
+  if(qv0.eligible===false){alert("⚠️ คุณไม่มีสิทธิ์ลาพักร้อนในปี "+y);return;}
+  ST[prefix].annualYear=y;
+  var pre=prefix==="emp"?"":prefix+"-";
+  setYearBtn(y,pre+"btn-annual-year-68",pre+"btn-annual-year-69");
+  var lbl=$(prefix+"-annual-rem-label");
+  if(lbl){var qv=getUserQuota(currentUser._key,y).annual||{used:0,total:0};lbl.textContent="เหลือ "+(qv.total-qv.used)+" วัน (ปี "+y+")";}
+  var fn=prefix==="emp"?updateSubmitBtn:prefix==="sup"?supUpdateSubmitBtn:mgrUpdateSubmitBtn;
+  if(fn)fn();
+}
+function updateAnnualYearButtons(prefix){
+  var pre=prefix==="emp"?"":prefix+"-";
+  var eligibleYears=[];
+  [2568,2569].forEach(function(y){
+    var btn=$(pre+"btn-annual-year-"+(y===2568?"68":"69"));
+    if(!btn)return;
+    var qv=(getUserQuota(currentUser._key,y).annual)||{};
+    var eligible=qv.eligible!==false;
+    if(eligible)eligibleYears.push(y);
+    btn.disabled=!eligible;
+    btn.style.opacity=eligible?"1":"0.4";
+    btn.style.cursor=eligible?"pointer":"not-allowed";
+    btn.title=eligible?"":"ไม่มีสิทธิ์ลาพักร้อนในปีนี้";
+  });
+  var cur=ST[prefix].annualYear||getCurrentBuddhistYear();
+  var curEligible=eligibleYears.indexOf(cur)!==-1;
+  if(!curEligible&&eligibleYears.length){selectAnnualYear(prefix,eligibleYears[0]);}
 }
 
 /* ── Submit check ── */
@@ -1047,7 +1140,7 @@ function checkDisabled(prefix){
 
 /* ── Employee view ── */
 function empTab(tab,btn){document.querySelectorAll("#view-employee .tab-btn").forEach(function(b){b.classList.remove("active");});btn.classList.add("active");if(tab==="dashboard"){show("emp-dashboard");hide("emp-request");renderEmployee();}else{hide("emp-dashboard");show("emp-request");buildTypeButtons("type-btns",ST.emp.type,null);buildSubtypeUI("emp",ST.emp.type,ST.emp.sub,"selectSubtype");updateSubmitBtn();}}
-function renderEmployee(){if(!currentUser||!canLeave(currentUser.role))return;var q=getUserQuota(currentUser._key);$("quota-grid").innerHTML=buildQuotaCards(q);var mine=getHistory().filter(function(h){return h.userId===currentUser._key;});$("my-history-count").textContent=mine.length+" รายการ";$("my-history-list").innerHTML=buildHistoryList(mine,"view");buildTypeButtons("type-btns",ST.emp.type,null);buildSubtypeUI("emp",ST.emp.type,ST.emp.sub,"selectSubtype");updateSubmitBtn();showTimeRange("emp");}
+function renderEmployee(){if(!currentUser||!canLeave(currentUser.role))return;var q=getUserQuota(currentUser._key);$("quota-grid").innerHTML=buildQuotaCards(q,currentUser._key);var mine=getHistory().filter(function(h){return h.userId===currentUser._key;});$("my-history-count").textContent=mine.length+" รายการ";$("my-history-list").innerHTML=buildHistoryList(mine,"view");buildTypeButtons("type-btns",ST.emp.type,null);buildSubtypeUI("emp",ST.emp.type,ST.emp.sub,"selectSubtype");updateSubmitBtn();showTimeRange("emp");}
 function updateSubmitBtn(){var el=$("btn-submit-leave");if(el)el.disabled=checkDisabled("emp");}
 function selectType(id){ST.emp.type=id;ST.emp.sub="";buildTypeButtons("type-btns",id,null);handleTypeSelect("emp",id,updateSubmitBtn);buildSubtypeUI("emp",id,"","selectSubtype");showTimeRange("emp");updateSubmitBtn();}
 function selectSubtype(sub){ST.emp.sub=sub;buildSubtypeUI("emp",ST.emp.type,sub,"selectSubtype");updateSubmitBtn();}
@@ -1056,7 +1149,7 @@ function selectHolidayYear(y){ST.emp.holidayYear=y;setYearBtn(y,"btn-year-68","b
 
 /* ── Supervisor view ── */
 function supTab(tab,btn){document.querySelectorAll("#view-supervisor .tab-btn").forEach(function(b){b.classList.remove("active");});btn.classList.add("active");hide("sup-dashboard");hide("sup-request");hide("sup-approve-section");if(tab==="dashboard"){show("sup-dashboard");renderSupDashboard();}else if(tab==="request"){show("sup-request");buildTypeButtons("sup-type-btns",ST.sup.type,null);buildSubtypeUI("sup",ST.sup.type,ST.sup.sub,"supSelectSubtype");supUpdateSubmitBtn();}else{show("sup-approve-section");renderSupApprove();}}
-function renderSupDashboard(){if(!currentUser||currentUser.role!=="supervisor")return;var q=getUserQuota(currentUser._key);$("sup-quota-grid").innerHTML=buildQuotaCards(q);var mine=getHistory().filter(function(h){return h.userId===currentUser._key;});$("sup-history-count").textContent=mine.length+" รายการ";$("sup-history-list").innerHTML=buildHistoryList(mine,"view");}
+function renderSupDashboard(){if(!currentUser||currentUser.role!=="supervisor")return;var q=getUserQuota(currentUser._key);$("sup-quota-grid").innerHTML=buildQuotaCards(q,currentUser._key);var mine=getHistory().filter(function(h){return h.userId===currentUser._key;});$("sup-history-count").textContent=mine.length+" รายการ";$("sup-history-list").innerHTML=buildHistoryList(mine,"view");}
 function supStatusTab(tab,btn){supStatusTabState=tab;document.querySelectorAll("#sup-approve-section .subtab").forEach(function(b){b.classList.remove("active");});btn.classList.add("active");renderSupApprove();}
 function renderSupApprove(){
   if(!currentUser||currentUser.role!=="supervisor")return;
@@ -1083,7 +1176,7 @@ function supSelectHolidayYear(y){ST.sup.holidayYear=y;setYearBtn(y,"sup-btn-year
 /* ── Manager view ── */
 function mgrMainTab(tab,btn){document.querySelectorAll("#view-manager > .tabs .tab-btn").forEach(function(b){b.classList.remove("active");});btn.classList.add("active");hide("mgr-overview-section");hide("mgr-leave-section");hide("mgr-approve-section");if(tab==="overview"){show("mgr-overview-section");renderMgrOverview();}else if(tab==="leave"){show("mgr-leave-section");buildTypeButtons("mgr-type-btns",ST.mgr.type,null);buildSubtypeUI("mgr",ST.mgr.type,ST.mgr.sub,"mgrSelectSubtype");mgrUpdateSubmitBtn();showTimeRange("mgr");}else{show("mgr-approve-section");renderApprove();}}
 function mgrStatusTab(tab,btn){mgrStatusTabState=tab;document.querySelectorAll("#mgr-approve-section .subtab").forEach(function(b){b.classList.remove("active");});btn.classList.add("active");renderApprove();}
-function renderMgrOverview(){if(!currentUser||!isManagerLevel(currentUser.role)||currentUser.role==="admin")return;if(!canLeave(currentUser.role)){$("mgr-quota-grid").innerHTML="";$("mgr-history-list").innerHTML="<div class='empty'>Role นี้ไม่สามารถยื่นลาได้</div>";return;}var q=getUserQuota(currentUser._key);$("mgr-quota-grid").innerHTML=buildQuotaCards(q);var mine=getHistory().filter(function(h){return h.userId===currentUser._key;});$("mgr-history-count").textContent=mine.length+" รายการ";$("mgr-history-list").innerHTML=buildHistoryList(mine,"view");}
+function renderMgrOverview(){if(!currentUser||!isManagerLevel(currentUser.role)||currentUser.role==="admin")return;if(!canLeave(currentUser.role)){$("mgr-quota-grid").innerHTML="";$("mgr-history-list").innerHTML="<div class='empty'>Role นี้ไม่สามารถยื่นลาได้</div>";return;}var q=getUserQuota(currentUser._key);$("mgr-quota-grid").innerHTML=buildQuotaCards(q,currentUser._key);var mine=getHistory().filter(function(h){return h.userId===currentUser._key;});$("mgr-history-count").textContent=mine.length+" รายการ";$("mgr-history-list").innerHTML=buildHistoryList(mine,"view");}
 function renderApprove(){
   if(!currentUser||!isManagerLevel(currentUser.role)||currentUser.role==="admin")return;
   var myRole=currentUser.role,myLv=getRoleLevel(myRole),dept=currentUser.dept,isSD=myRole==="deputy"&&dept==="special_dept";
@@ -1153,12 +1246,24 @@ async function submitLeave(prefix){
       return;
     }
   }
-  var QUOTA_ENFORCED=["annual","sick","personal","comp","maternity","special"];
-  if(QUOTA_ENFORCED.indexOf(t)!==-1){
-    var uq=getUserQuota(currentUser._key),qv=uq[t]||{used:0,total:0},remaining=qv.total-qv.used;
-    if(days>remaining){
-      alert("⚠️ ไม่สามารถยื่นคำขอลาได้\n\nประเภท: "+getTypeLabelFull(t,sub)+"\nโควต้าคงเหลือ: "+remaining+" วัน\nจำนวนที่ขอลาครั้งนี้: "+days+" วัน\n\nกรุณาติดต่อผู้ดูแลระบบหากต้องการขอเพิ่มโควต้า");
+  var QUOTA_HARD_BLOCK=["annual","comp","maternity","special"];
+  var QUOTA_WARN_ONLY=["sick","personal"];
+  var selectedAnnualYear=t==="annual"?(ST[prefix].annualYear||getCurrentBuddhistYear()):null;
+  if(QUOTA_HARD_BLOCK.indexOf(t)!==-1){
+    var uq=t==="annual"?getUserQuota(currentUser._key,selectedAnnualYear):getUserQuota(currentUser._key),qv=uq[t]||{used:0,total:0},remaining=qv.total-qv.used;
+    if(t==="annual"&&qv.eligible===false){
+      alert("⚠️ ไม่สามารถยื่นคำขอลาได้\n\nคุณไม่มีสิทธิ์ลาพักร้อนในปี "+selectedAnnualYear+"\n\nกรุณาติดต่อผู้ดูแลระบบหากมีข้อสงสัย");
       return;
+    }
+    if(days>remaining){
+      alert("⚠️ ไม่สามารถยื่นคำขอลาได้\n\nประเภท: "+getTypeLabelFull(t,sub)+(t==="annual"?" (ปี "+selectedAnnualYear+")":"")+"\nโควต้าคงเหลือ: "+remaining+" วัน\nจำนวนที่ขอลาครั้งนี้: "+days+" วัน\n\nกรุณาติดต่อผู้ดูแลระบบหากต้องการขอเพิ่มโควต้า");
+      return;
+    }
+  }else if(QUOTA_WARN_ONLY.indexOf(t)!==-1){
+    var uq2=getUserQuota(currentUser._key),qv2=uq2[t]||{used:0,total:0},remaining2=qv2.total-qv2.used;
+    if(days>remaining2){
+      var ok=confirm("⚠️ คุณใช้วันลาเกินโควต้าแล้ว\n\nประเภท: "+getTypeLabelFull(t,sub)+"\nโควต้าคงเหลือ: "+remaining2+" วัน\nจำนวนที่ขอลาครั้งนี้: "+days+" วัน\n\nตามนโยบายบริษัท วันลาส่วนที่เกินโควต้าจะไม่ได้รับค่าจ้าง\n\nต้องการยื่นคำขอลาต่อหรือไม่?");
+      if(!ok)return;
     }
   }
   var pLabel=per==="am"?" (ครึ่งวันเช้า)":per==="pm"?" (ครึ่งวันบ่าย)":"";
@@ -1166,7 +1271,7 @@ async function submitLeave(prefix){
   var noteText="";
   if(isDayoff)noteText="ทำงาน "+fmtDate(from)+" → สลับหยุด "+fmtDate(dayoffDate)+pLabel+(note?" · "+note:"");
   else if(isComp){var cp=compVal.split("|");var cpP=cp[0].split("-");var cpDateStr=parseInt(cpP[2])+" "+MONTHS[parseInt(cpP[1])]+" "+cpP[0];noteText="ชดเชย: "+cp[2]+" ("+cp[1]+" "+cpDateStr+")"+pLabel+(note?" · "+note:"");}
-  else noteText=pLabel+(note?" "+note:"");
+  else noteText=(t==="annual"?"(ใช้โควต้าปี "+selectedAnnualYear+") ":"")+pLabel+(note?" "+note:"");
   var toDate=isDayoff?fmtDate(dayoffDate):isComp?fmtDate(from):isHalf?fmtDate(from):fmtDate(to);
   var selfUser=usersData[currentUser._key]||currentUser;
   var supAssign=getSupervisorAssignment(selfUser);
@@ -1177,6 +1282,7 @@ async function submitLeave(prefix){
   else if(!hasAvailableSupervisor(selfUser)){initStatus="supervisor_approved";supInfo={supervisorNote:"ข้ามขั้นตอนเห็นชอบ (ไม่มีหัวหน้างานที่รับผิดชอบ)"};}
   else{initStatus="pending";supInfo={};}
   var rec=Object.assign({userId:currentUser._key,userRole:currentUser.role,employee:currentUser.name,dept:currentUser.dept,type:t,subtype:sub||"",label:getTypeLabelFull(t,sub),sublabel:getSubLabel(t,sub),quotaKey:t,from:fmtDate(from),to:toDate,days:days,daysUnit:timeMode?"ชั่วโมง":"วัน",note:noteText,status:initStatus,submitted:fmtDate(new Date().toISOString().slice(0,10)),createdAt:Date.now()},supInfo);
+  if(t==="annual")rec.annualYear=selectedAnnualYear;
   if(timeRange)rec.timeRange=timeRange;
   if(isComp&&compVal){var cpP=compVal.split("|");if(cpP[0])rec.compHolidayDate=cpP[0];}
   await refHistory().push(rec);
@@ -1187,7 +1293,7 @@ async function submitLeave(prefix){
   $(noteId).value="";var ch=$(pre+"f-comp-holiday");if(ch)ch.value="";
   var tw=$(pre+"f-to-wrap");if(tw){tw.style.display="";tw.removeAttribute("data-dayoff");}
   var lf=$(pre+"label-from");if(lf)lf.textContent="วันที่เริ่มต้น";
-  [pre+"dayoff-extra",pre+"comp-extra",pre+"f-time-range-wrap"].forEach(function(id){var e=$(id);if(e)e.classList.add("hidden");});
+  [pre+"dayoff-extra",pre+"comp-extra",pre+"annual-extra",pre+"f-time-range-wrap"].forEach(function(id){var e=$(id);if(e)e.classList.add("hidden");});
   resetTimeBtn(prefix);removeSingleDate(prefix);updatePeriodBtnStyle(prefix,"full");
   buildTypeButtons(prefix==="emp"?"type-btns":prefix+"-type-btns","",null);
   var stW=$(prefix==="emp"?"emp-subtype-wrap":prefix+"-subtype-wrap");if(stW){stW.classList.add("hidden");stW.innerHTML="";}
@@ -1231,7 +1337,18 @@ function renderRows(filtered,mode){
 async function consentItem(key){var note=prompt("บันทึกหัวหน้างาน (ถ้ามี):","");await refHistory().child(key).update({status:"supervisor_approved",supervisorId:currentUser._key,supervisorName:currentUser.name,supervisorNote:note||""});}
 function openRejectItem(key,mode){rejectTargetId=key;$("reject-modal-title").textContent=mode==="not_consent"?"ยืนยันไม่เห็นชอบ":"ยืนยันการปฏิเสธ";$("reject-note").value="";show("reject-modal");}
 async function confirmReject(){var note=($("reject-note").value||"").trim();await refHistory().child(rejectTargetId+"/status").set("rejected");if(note)await refHistory().child(rejectTargetId+"/adminNote").set(note);closeModal("reject-modal");rejectTargetId=null;}
-async function approveItem(key,userId,qk,days,unit){await refHistory().child(key+"/status").set("approved");if(unit==="ชั่วโมง")return;var q=getUserQuota(userId),cur=q[qk]||{used:0,total:0};await refQuota().child(userId+"/"+qk+"/used").set((cur.used||0)+Number(days));}
+async function approveItem(key,userId,qk,days,unit){
+  await refHistory().child(key+"/status").set("approved");
+  if(unit==="ชั่วโมง")return;
+  var h=historyData[key]||{};
+  if(qk==="annual"){
+    var year=annualYearFromRecord(h),q=getUserQuota(userId,year),cur=q.annual||{used:0,total:0};
+    await refQuota().child(userId+"/annual/"+year+"/used").set((cur.used||0)+Number(days));
+    return;
+  }
+  var q2=getUserQuota(userId),cur2=q2[qk]||{used:0,total:0};
+  await refQuota().child(userId+"/"+qk+"/used").set((cur2.used||0)+Number(days));
+}
 function approveItemDirect(key,userId,qk,days,unit){approveItem(key,userId,qk,days,unit);}
 function openCancelModal(key){cancelTargetId=key;var item=historyData[key];if(!item)return;$("cancel-info").textContent=item.employee+" · "+item.label+" · "+item.from;$("cancel-status").value=item.status||"pending";$("cancel-note").value=item.adminNote||"";$("cancel-days").value=item.days||1;$("cancel-from").value=parseThaiDate(item.from);$("cancel-to").value=parseThaiDate(item.to)||parseThaiDate(item.from);show("cancel-modal");}
 async function confirmCancel(){
@@ -1245,11 +1362,25 @@ async function confirmCancel(){
   var newTo=toISO?fmtDate(toISO):(fromISO?newFrom:item.to);
   if(item.daysUnit!=="ชั่วโมง"){
     var wasCounted=oldStatus==="approved",willBeCounted=ns==="approved";
-    var q=getUserQuota(item.userId),cur=q[qk]||{used:0,total:0},usedNow=cur.used||0;
-    if(wasCounted&&!willBeCounted)usedNow=Math.max(0,usedNow-Number(oldDays));
-    else if(!wasCounted&&willBeCounted)usedNow=usedNow+Number(newDays);
-    else if(wasCounted&&willBeCounted&&Number(newDays)!==Number(oldDays))usedNow=Math.max(0,usedNow-Number(oldDays)+Number(newDays));
-    if(wasCounted||willBeCounted)await refQuota().child(item.userId+"/"+qk+"/used").set(usedNow);
+    if(qk==="annual"){
+      var oldYear=annualYearFromRecord(item),newYear=annualYearFromRecord({from:newFrom});
+      if(oldYear===newYear){
+        var qA=getUserQuota(item.userId,newYear),curA=qA.annual||{used:0,total:0},usedNowA=curA.used||0;
+        if(wasCounted&&!willBeCounted)usedNowA=Math.max(0,usedNowA-Number(oldDays));
+        else if(!wasCounted&&willBeCounted)usedNowA=usedNowA+Number(newDays);
+        else if(wasCounted&&willBeCounted&&Number(newDays)!==Number(oldDays))usedNowA=Math.max(0,usedNowA-Number(oldDays)+Number(newDays));
+        if(wasCounted||willBeCounted)await refQuota().child(item.userId+"/annual/"+newYear+"/used").set(usedNowA);
+      }else{
+        if(wasCounted){var qO=getUserQuota(item.userId,oldYear),cO=qO.annual||{used:0,total:0};await refQuota().child(item.userId+"/annual/"+oldYear+"/used").set(Math.max(0,(cO.used||0)-Number(oldDays)));}
+        if(willBeCounted){var qN=getUserQuota(item.userId,newYear),cN=qN.annual||{used:0,total:0};await refQuota().child(item.userId+"/annual/"+newYear+"/used").set((cN.used||0)+Number(newDays));}
+      }
+    }else{
+      var q=getUserQuota(item.userId),cur=q[qk]||{used:0,total:0},usedNow=cur.used||0;
+      if(wasCounted&&!willBeCounted)usedNow=Math.max(0,usedNow-Number(oldDays));
+      else if(!wasCounted&&willBeCounted)usedNow=usedNow+Number(newDays);
+      else if(wasCounted&&willBeCounted&&Number(newDays)!==Number(oldDays))usedNow=Math.max(0,usedNow-Number(oldDays)+Number(newDays));
+      if(wasCounted||willBeCounted)await refQuota().child(item.userId+"/"+qk+"/used").set(usedNow);
+    }
   }
   var upd={status:ns,days:newDays,from:newFrom,to:newTo};if(note)upd.adminNote=note;
   await refHistory().child(cancelTargetId).update(upd);closeModal("cancel-modal");cancelTargetId=null;
@@ -1264,7 +1395,7 @@ function renderEmpTable(){
   tb.innerHTML=all.length?all.map(function(u){var tenure=u.startDate?calcTenure(u.startDate):"",ci=u.company&&COMPANIES[u.company]?COMPANIES[u.company]:null;return "<tr><td><div style='font-weight:600'>"+u.name+"</div>"+(tenure?"<div style='font-size:11px;color:#aaa'>อายุงาน "+tenure+"</div>":"")+"</td><td style='font-family:monospace;font-size:12px;color:#666'>"+u.username+"</td><td>"+(u.position||"—")+"</td><td>"+(u.dept?deptPill(u.dept):"—")+"</td><td>"+(ci?"<span class='company-pill' style='color:"+ci.color+";background:"+ci.bg+";border-color:"+ci.border+"'>"+ci.short+"</span>":"—")+"</td><td><select onchange=\"changeRole('"+u._key+"',this.value)\" style='padding:4px 8px;border-radius:8px;border:1.5px solid #e8e8e8;font-size:12px;font-weight:600;color:"+ROLE_COLOR[u.role]+";background:#fafafa;cursor:pointer;outline:none'>"+Object.entries(ROLE_LABEL).map(function(e){return "<option value='"+e[0]+"'"+(u.role===e[0]?" selected":"")+">"+e[1]+"</option>";}).join("")+"</select></td><td style='white-space:nowrap'><button class='btn-edit' onclick=\"openEmpModal('"+u._key+"')\">✏️</button> <button class='btn-edit' style='border-color:#bfdbfe;color:#1e40af' onclick=\"openQuotaModal('"+u._key+"')\">📅</button>"+(canLeave(u.role)?" <button class='btn-edit' style='border-color:#ddd6fe;color:#6d28d9' onclick=\"openApproverModal('"+u._key+"')\" title='กำหนดผู้อนุมัติ'>👥</button>":"")+(u._key!==currentUser._key?" <button class='btn-del' onclick=\"openDelModal('"+u._key+"','"+u.name+"')\">🗑️</button>":"")+"</td></tr>";}).join(""):"<tr><td colspan='7' style='text-align:center;color:#bbb;padding:32px'>ไม่พบพนักงาน</td></tr>";
 }
 function openEmpModal(key){empEditId=key;$("em-err").classList.add("hidden");if(key){var u=usersData[key];if(!u)return;$("emp-modal-title").textContent="แก้ไขข้อมูลพนักงาน";$("em-name").value=u.name||"";$("em-username").value=u.username||"";$("em-password").value=u.password||"";$("em-position").value=u.position||"";$("em-startdate").value=u.startDate||"";$("em-dept").value=u.dept||"steak";$("em-role").value=u.role||"employee";$("em-custom-label").value=u.customRoleLabel||"";$("em-company").value=u.company||"";$("em-telegram").value=u.telegramChatId||"";}else{$("emp-modal-title").textContent="เพิ่มพนักงานใหม่";["em-name","em-username","em-password","em-position","em-startdate","em-custom-label","em-telegram"].forEach(function(id){$(id).value="";});$("em-dept").value="steak";$("em-role").value="employee";$("em-company").value="";}show("emp-modal");}
-async function saveEmployee(){var name=($("em-name").value||"").trim(),username=($("em-username").value||"").trim(),password=($("em-password").value||"").trim(),position=($("em-position").value||"").trim(),startDate=$("em-startdate").value||"",dept=$("em-dept").value||"steak",role=$("em-role").value||"employee",customRoleLabel=($("em-custom-label").value||"").trim(),company=$("em-company").value||"",telegramChatId=($("em-telegram").value||"").trim();if(!name||!username||!password){$("em-err-text").textContent="กรุณากรอกชื่อ Username และรหัสผ่าน";show("em-err");return;}var snap=await refUsers().once("value"),all=snap.val()||{};if(Object.entries(all).filter(function(e){return e[1].username===username&&e[0]!==empEditId;}).length){$("em-err-text").textContent="Username นี้ถูกใช้แล้ว";show("em-err");return;}var data={name:name,username:username,password:password,position:position,startDate:startDate,dept:role==="admin"?null:dept,role:role,avatar:name[0],color:ROLE_COLOR[role]||"#1a1a1a",customRoleLabel:customRoleLabel,company:company,telegramChatId:telegramChatId};if(empEditId){await refUser(empEditId).update(data);}else{var nk=refUsers().push().key;await refUser(nk).set(data);if(canLeave(role)){var initQuota=JSON.parse(JSON.stringify(DEFAULT_QUOTA));initQuota.annual.total=getAnnualQuotaTotal(startDate);await refQuota().child(nk).set(initQuota);}}closeModal("emp-modal");}
+async function saveEmployee(){var name=($("em-name").value||"").trim(),username=($("em-username").value||"").trim(),password=($("em-password").value||"").trim(),position=($("em-position").value||"").trim(),startDate=$("em-startdate").value||"",dept=$("em-dept").value||"steak",role=$("em-role").value||"employee",customRoleLabel=($("em-custom-label").value||"").trim(),company=$("em-company").value||"",telegramChatId=($("em-telegram").value||"").trim();if(!name||!username||!password){$("em-err-text").textContent="กรุณากรอกชื่อ Username และรหัสผ่าน";show("em-err");return;}var snap=await refUsers().once("value"),all=snap.val()||{};if(Object.entries(all).filter(function(e){return e[1].username===username&&e[0]!==empEditId;}).length){$("em-err-text").textContent="Username นี้ถูกใช้แล้ว";show("em-err");return;}var data={name:name,username:username,password:password,position:position,startDate:startDate,dept:role==="admin"?null:dept,role:role,avatar:name[0],color:ROLE_COLOR[role]||"#1a1a1a",customRoleLabel:customRoleLabel,company:company,telegramChatId:telegramChatId};if(empEditId){await refUser(empEditId).update(data);}else{var nk=refUsers().push().key;await refUser(nk).set(data);if(canLeave(role)){var initQuota=JSON.parse(JSON.stringify(DEFAULT_QUOTA));var cy0=getCurrentBuddhistYear();initQuota.annual={};initQuota.annual[cy0]={used:0,total:getAnnualQuotaTotal(startDate)};await refQuota().child(nk).set(initQuota);}}closeModal("emp-modal");}
 function changeRole(key,newRole){refUser(key).update({role:newRole,color:ROLE_COLOR[newRole]||"#1a1a1a"});}
 function openDelModal(key,name){delTargetId=key;$("del-emp-name").textContent=name;show("del-modal");}
 async function confirmDelete(){if(!delTargetId)return;await refUser(delTargetId).remove();closeModal("del-modal");delTargetId=null;}
@@ -1276,7 +1407,31 @@ function switchQuotaTab(tab){
   $("qm-tab-btn-quota").classList.toggle("active",tab==="quota");
   $("qm-tab-btn-comp").classList.toggle("active",tab==="comp");
 }
-function openQuotaModal(key){quotaEditId=key;var u=usersData[key];if(!u)return;switchQuotaTab("quota");$("quota-modal-name").textContent="👤 "+u.name+" · "+(u.position||"");$("quota-fields").innerHTML=TYPES.map(function(t){var qv=getUserQuota(key)[t.id]||{used:0,total:0};return "<div style='display:grid;grid-template-columns:1fr 100px 100px;align-items:center;gap:10px;padding:10px 12px;background:#fafafa;border-radius:10px;border:1px solid #eee'><div style='display:flex;align-items:center;gap:8px'><span>"+t.icon+"</span><span style='font-size:13px'>"+t.label+"</span></div><div><label style='font-size:10px;color:#999;display:block;margin-bottom:3px'>ใช้ไปแล้ว</label><input type='number' id='q-used-"+t.id+"' value='"+qv.used+"' min='0' step='0.5' class='field-input' style='padding:6px;font-size:13px;text-align:center'></div><div><label style='font-size:10px;color:#999;display:block;margin-bottom:3px'>โควต้ารวม</label><input type='number' id='q-total-"+t.id+"' value='"+qv.total+"' min='0' step='0.5' class='field-input' style='padding:6px;font-size:13px;text-align:center'></div></div>";}).join("");renderCompHolidayFields(key);show("quota-modal");}
+var quotaAnnualYearState=null;
+function openQuotaModal(key){quotaEditId=key;var u=usersData[key];if(!u)return;switchQuotaTab("quota");$("quota-modal-name").textContent="👤 "+u.name+" · "+(u.position||"");quotaAnnualYearState=null;renderAnnualQuotaBlock(key);$("quota-fields").innerHTML=TYPES.filter(function(t){return t.id!=="annual";}).map(function(t){var qv=getUserQuota(key)[t.id]||{used:0,total:0};return "<div style='display:grid;grid-template-columns:1fr 100px 100px;align-items:center;gap:10px;padding:10px 12px;background:#fafafa;border-radius:10px;border:1px solid #eee'><div style='display:flex;align-items:center;gap:8px'><span>"+t.icon+"</span><span style='font-size:13px'>"+t.label+"</span></div><div><label style='font-size:10px;color:#999;display:block;margin-bottom:3px'>ใช้ไปแล้ว</label><input type='number' id='q-used-"+t.id+"' value='"+qv.used+"' min='0' step='0.5' class='field-input' style='padding:6px;font-size:13px;text-align:center'></div><div><label style='font-size:10px;color:#999;display:block;margin-bottom:3px'>โควต้ารวม</label><input type='number' id='q-total-"+t.id+"' value='"+qv.total+"' min='0' step='0.5' class='field-input' style='padding:6px;font-size:13px;text-align:center'></div></div>";}).join("");renderCompHolidayFields(key);show("quota-modal");}
+function renderAnnualQuotaBlock(key){
+  var years=getAnnualQuotaYears(key);
+  if(quotaAnnualYearState===null||years.indexOf(quotaAnnualYearState)===-1)quotaAnnualYearState=getCurrentBuddhistYear();
+  var tabsHTML=years.map(function(y){return "<button class='subtab"+(y===quotaAnnualYearState?" active":"")+"' onclick=\"selectQuotaAnnualYear("+y+")\">ปี "+y+"</button>";}).join("");
+  var yearBlocks=years.map(function(y){
+    var qv=getAnnualQuotaForYear(key,y);
+    return "<div id='quota-annual-year-"+y+"' style='display:"+(y===quotaAnnualYearState?"block":"none")+"'><label style='display:flex;align-items:center;gap:8px;margin-bottom:10px;cursor:pointer;font-size:12.5px;font-weight:600'><input type='checkbox' id='q-annual-eligible-"+y+"'"+(qv.eligible?" checked":"")+" style='width:16px;height:16px' onchange=\"toggleAnnualEligible("+y+",this.checked)\"> มีสิทธิ์ลาพักร้อนในปีนี้</label><div id='quota-annual-inputs-"+y+"' style='display:grid;grid-template-columns:1fr 1fr;gap:10px;opacity:"+(qv.eligible?"1":"0.45")+"'><div><label style='font-size:10px;color:#999;display:block;margin-bottom:3px'>ใช้ไปแล้ว</label><input type='number' id='q-annual-used-"+y+"' value='"+qv.used+"' min='0' step='0.5' class='field-input' style='padding:6px;font-size:13px;text-align:center'"+(qv.eligible?"":" disabled")+"></div><div><label style='font-size:10px;color:#999;display:block;margin-bottom:3px'>โควต้ารวม</label><input type='number' id='q-annual-total-"+y+"' value='"+qv.total+"' min='0' step='0.5' class='field-input' style='padding:6px;font-size:13px;text-align:center'"+(qv.eligible?"":" disabled")+"></div></div></div>";
+  }).join("");
+  $("quota-annual-block").innerHTML="<div style='padding:12px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px'><div style='display:flex;align-items:center;gap:8px;margin-bottom:8px'><span>🏖️</span><strong style='font-size:13px'>ลาพักร้อน (แยกตามปี)</strong></div><div class='subtabs' style='margin-bottom:10px'>"+tabsHTML+"</div>"+yearBlocks+"</div>";
+}
+function toggleAnnualEligible(y,checked){
+  var wrap=$("quota-annual-inputs-"+y);if(!wrap)return;
+  wrap.style.opacity=checked?"1":"0.45";
+  wrap.querySelectorAll("input").forEach(function(inp){inp.disabled=!checked;});
+}
+function selectQuotaAnnualYear(y){
+  quotaAnnualYearState=y;
+  document.querySelectorAll("[id^='quota-annual-year-']").forEach(function(el){el.style.display=(el.id==="quota-annual-year-"+y)?"grid":"none";});
+  var years=getAnnualQuotaYears(quotaEditId);
+  var btns=document.querySelectorAll("#quota-annual-block .subtabs .subtab");
+  btns.forEach(function(b){b.classList.remove("active");});
+  years.forEach(function(yr,i){if(yr===y&&btns[i])btns[i].classList.add("active");});
+}
 var compHolidayYearState=null;
 function renderCompHolidayFields(key){
   var saved=allowedHolidaysData[key]||null;
@@ -1314,7 +1469,10 @@ function toggleCompUnlimited(){
 function selectAllCompHolidays(val){document.querySelectorAll("#comp-year-"+compHolidayYearState+" .comp-holiday-cb").forEach(function(cb){cb.checked=val;styleCompRow(cb.parentNode);});}
 async function saveQuota(){
   if(!quotaEditId)return;
-  var upd={};TYPES.forEach(function(t){upd[t.id]={used:parseFloat(($("q-used-"+t.id)||{value:"0"}).value)||0,total:parseFloat(($("q-total-"+t.id)||{value:"0"}).value)||0};});
+  var upd={};TYPES.filter(function(t){return t.id!=="annual";}).forEach(function(t){upd[t.id]={used:parseFloat(($("q-used-"+t.id)||{value:"0"}).value)||0,total:parseFloat(($("q-total-"+t.id)||{value:"0"}).value)||0};});
+  var years=getAnnualQuotaYears(quotaEditId),annualObj={};
+  years.forEach(function(y){var uInp=$("q-annual-used-"+y),tInp=$("q-annual-total-"+y),eInp=$("q-annual-eligible-"+y);annualObj[y]={used:uInp?(parseFloat(uInp.value)||0):0,total:tInp?(parseFloat(tInp.value)||0):0,eligible:eInp?!!eInp.checked:true};});
+  upd.annual=annualObj;
   await refQuota().child(quotaEditId).set(upd);
   var unlimited=$("comp-unlimited").checked,compData={_unlimited:unlimited};
   if(!unlimited){document.querySelectorAll(".comp-holiday-cb").forEach(function(cb){if(cb.checked)compData[cb.dataset.date]=true;});}
@@ -1416,7 +1574,12 @@ function renderAdminHolidays(){
     var p=h.date.split("-");
     return "<div style='display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;border-radius:8px;border:1px solid #eee;background:#fafafa'><div style='font-size:13px'><strong>"+h.name+"</strong><span style='color:#999;margin-left:8px'>"+h.day+" "+parseInt(p[2])+" "+MONTHS[parseInt(p[1])]+" "+y+"</span></div><div style='display:flex;gap:6px'><button class='btn-edit' onclick=\"openHolidayModal("+y+",'"+h.date+"')\">✏️</button><button class='btn-del' onclick=\"deleteHolidayEntry("+y+",'"+h.date+"')\">🗑️</button></div></div>";
   }).join("")||"<p style='color:#bbb;font-size:12.5px;padding:8px 0'>ยังไม่มีวันหยุดในปีนี้</p>";
-  $("admin-holidays-list").innerHTML="<div class='table-card' style='padding:16px'><div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px'><strong style='font-size:15px'>ปี "+y+" ("+list.length+" วัน)</strong><button onclick=\"openHolidayModal("+y+",null)\" style='padding:7px 12px;border-radius:8px;border:1.5px solid #d1fae5;background:#f0fdf4;color:#166534;font-size:12px;font-weight:600;cursor:pointer'>+ เพิ่มวันหยุด</button></div><div style='display:flex;flex-direction:column;gap:6px'>"+rows+"</div></div>";
+  $("admin-holidays-list").innerHTML="<div class='table-card' style='padding:16px'><div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px'><strong style='font-size:15px'>ปี "+y+" ("+list.length+" วัน)</strong><div style='display:flex;gap:8px'>"+(y!==2568&&y!==2569?"<button onclick=\"deleteHolidayYear("+y+")\" style='padding:7px 12px;border-radius:8px;border:1.5px solid #fecaca;background:#fef2f2;color:#991b1b;font-size:12px;font-weight:600;cursor:pointer'>🗑️ ลบปีนี้</button>":"")+"<button onclick=\"openHolidayModal("+y+",null)\" style='padding:7px 12px;border-radius:8px;border:1.5px solid #d1fae5;background:#f0fdf4;color:#166534;font-size:12px;font-weight:600;cursor:pointer'>+ เพิ่มวันหยุด</button></div></div><div style='display:flex;flex-direction:column;gap:6px'>"+rows+"</div></div>";
+}
+function deleteHolidayYear(year){
+  if(year===2568||year===2569){alert("ไม่สามารถลบปีเริ่มต้น (2568/2569) ได้");return;}
+  if(!confirm("ลบปี "+year+" ทั้งหมด รวมวันหยุดทุกวันในปีนี้?\nการกระทำนี้ไม่สามารถย้อนกลับได้"))return;
+  db.ref(bPath("holidays/"+year)).remove().then(function(){adminHolidayYearState=null;renderAdminHolidays();});
 }
 function adminSelectHolidayYear(y){adminHolidayYearState=y;renderAdminHolidays();}
 function openHolidayModal(year,date){
@@ -1462,7 +1625,7 @@ function addHolidayYear(){
 }
 
 /* ── Sync quota ── */
-async function syncQuotaDefaults(){if(!confirm("อัปเดตโควต้าวันลาให้พนักงานทุกคนตามเงื่อนไขใหม่?\n(รวมกฎ: พนักงานอายุงานไม่ถึง 1 ปี จะได้โควต้าลาพักร้อน = 0 โดยอัตโนมัติ)"))return;var uSnap=await refUsers().once("value"),uAll=uSnap.val()||{},qSnap=await refQuota().once("value"),qAll=qSnap.val()||{},upd={};Object.entries(uAll).forEach(function(e){var k=e[0],u=e[1];if(!canLeave(u.role))return;var cur=qAll[k]||{},merged={};Object.keys(DEFAULT_QUOTA).forEach(function(type){var def=DEFAULT_QUOTA[type],saved=cur[type]||{};if(type==="annual"){merged.annual={used:saved.used||0,total:getAnnualQuotaTotal(u.startDate)};return;}merged[type]={used:saved.used||0,total:(saved.total&&saved.total>=def.total)?saved.total:def.total};});upd[k]=merged;});if(Object.keys(upd).length){await refQuota().update(upd);alert("✅ อัปเดตโควต้าเรียบร้อย "+Object.keys(upd).length+" คน");}}
+async function syncQuotaDefaults(){if(!confirm("อัปเดตโควต้าวันลาให้พนักงานทุกคนตามเงื่อนไขใหม่?\n(รวมกฎ: พนักงานอายุงานไม่ถึง 1 ปี จะได้โควต้าลาพักร้อน = 0 โดยอัตโนมัติ)"))return;var uSnap=await refUsers().once("value"),uAll=uSnap.val()||{},qSnap=await refQuota().once("value"),qAll=qSnap.val()||{},upd={};var cyS=getCurrentBuddhistYear();Object.entries(uAll).forEach(function(e){var k=e[0],u=e[1];if(!canLeave(u.role))return;var cur=qAll[k]||{},merged={};Object.keys(DEFAULT_QUOTA).forEach(function(type){var def=DEFAULT_QUOTA[type],saved=cur[type]||{};if(type==="annual"){var existingAnnual={};if(saved.used!==undefined||saved.total!==undefined){existingAnnual[cyS]={used:saved.used||0,total:saved.total,eligible:saved.eligible!==undefined?!!saved.eligible:undefined};}else{existingAnnual=Object.assign({},saved);}var prevY=existingAnnual[cyS]||{};existingAnnual[cyS]={used:prevY.used||0,total:getAnnualQuotaTotal(u.startDate),eligible:prevY.eligible!==undefined?prevY.eligible:hasOneYearTenure(u.startDate)};merged.annual=existingAnnual;return;}merged[type]={used:saved.used||0,total:(saved.total&&saved.total>=def.total)?saved.total:def.total};});upd[k]=merged;});if(Object.keys(upd).length){await refQuota().update(upd);alert("✅ อัปเดตโควต้าเรียบร้อย "+Object.keys(upd).length+" คน");}}
 
 /* ── Copy employees ── */
 async function openCopyEmpModal(){$("copy-search").value="";$("copy-result").classList.add("hidden");$("copy-from-branch").value=currentBranch==="farm"?"ho":"farm";$("copy-to-branch").value=currentBranch;await loadCopySourceEmps();show("copy-emp-modal");}
@@ -1496,6 +1659,33 @@ function confirmExportExcel(){
   var fromDate=$("exp-from").value||"",toDate=$("exp-to").value||"";
   closeModal("export-excel-modal");
   exportExcel(fromDate,toDate);
+}
+function exportQuotaReport(){
+  var headers=["ชื่อพนักงาน","Username","ฝ่าย","บริษัท","ประเภทการลา","ปี","ใช้ไปแล้ว","โควต้ารวม","คงเหลือ","วันที่ใช้ไป"];
+  var rows=[];
+  getAllUsers().filter(function(u){return canLeave(u.role);}).forEach(function(u){
+    var uid=u._key;
+    var deptLabel=(DEPTS[u.dept]&&DEPTS[u.dept].label)||"";
+    var compLabel=u.company&&COMPANIES[u.company]?COMPANIES[u.company].label:"";
+    TYPES.forEach(function(t){
+      function usedDatesFor(matchFn){
+        return getHistory().filter(function(h){return h.userId===uid&&h.type===t.id&&h.status==="approved"&&matchFn(h);}).map(function(h){return h.from+(h.to&&h.to!==h.from?" ถึง "+h.to:"")+" ("+h.days+" "+(h.daysUnit||"วัน")+")";}).join(" | ");
+      }
+      if(t.id==="annual"){
+        getAnnualQuotaYears(uid).forEach(function(y){
+          var qv=getAnnualQuotaForYear(uid,y);
+          var dates=usedDatesFor(function(h){return annualYearFromRecord(h)===y;});
+          if(qv.used===0&&qv.total===0&&!dates)return;
+          rows.push([u.name,u.username,deptLabel,compLabel,t.label,"ปี "+y,qv.used,qv.total,qv.total-qv.used,dates]);
+        });
+      }else{
+        var qv2=getUserQuota(uid)[t.id]||{used:0,total:0};
+        var dates2=usedDatesFor(function(){return true;});
+        rows.push([u.name,u.username,deptLabel,compLabel,t.label,"",qv2.used,qv2.total,qv2.total-qv2.used,dates2]);
+      }
+    });
+  });
+  dlFile("\uFEFF"+[headers].concat(rows).map(function(r){return r.map(function(c){return "\""+String(c).replace(/"/g,"\"\"")+"\"";}).join(",");}).join("\r\n"),"text/csv","LeaveOS_QuotaReport_"+currentBranch.toUpperCase()+"_"+stamp()+".csv");
 }
 function exportExcel(fromDate,toDate){var search=($("admin-search")||{value:""}).value||"";var filtered=getHistory().filter(function(h){var inTab=(adminLeaveTabState==="all"||h.status===adminLeaveTabState)&&(h.employee.includes(search)||h.label.includes(search));if(!inTab)return false;if(fromDate&&h.from<fromDate)return false;if(toDate&&h.from>toDate)return false;return true;});var sL={approved:"อนุมัติแล้ว",pending:"รออนุมัติ",supervisor_approved:"ผ่านหัวหน้างาน",rejected:"ไม่อนุมัติ",cancelled:"ยกเลิก"};var headers=["ชื่อพนักงาน","ฝ่าย","บริษัท","ประเภทการลา","รายละเอียด","วันที่เริ่มต้น","วันที่สิ้นสุด","จำนวนวัน","สถานะ","หัวหน้างาน","หมายเหตุ"];var rows=filtered.map(function(h){var eu=usersData[h.userId],comp=eu&&eu.company&&COMPANIES[eu.company]?COMPANIES[eu.company].label:"";return [h.employee,(DEPTS[h.dept]&&DEPTS[h.dept].label)||"",comp,h.label,h.sublabel||"",h.from,h.to,h.days,sL[h.status]||"",h.supervisorName||"",h.note||""];});var suffix=(fromDate||toDate)?"_"+(fromDate||"start")+"_to_"+(toDate||"end"):"";dlFile("\uFEFF"+[headers].concat(rows).map(function(r){return r.map(function(c){return "\""+String(c).replace(/"/g,"\"\"")+"\"";}).join(",");}).join("\r\n"),"text/csv","LeaveOS_"+currentBranch.toUpperCase()+suffix+"_"+stamp()+".csv");}
 
