@@ -1834,36 +1834,31 @@ function confirmExportExcel(){
   exportExcel(fromDate,toDate);
 }
 function exportQuotaReport(){
-  var headers=["ชื่อพนักงาน","Username","ฝ่าย","บริษัท","ประเภทการลา","ปี","ใช้ไปแล้ว","โควต้ารวม","คงเหลือ","วันที่ใช้ไป"];
-  var rows=[];
-  getAllUsers().filter(function(u){return canLeave(u.role);}).forEach(function(u){
+  var FIXED_YEARS=[2568,2569];
+  var headers=["ชื่อพนักงาน","Username","ฝ่าย","บริษัท"];
+  TYPES.forEach(function(t){
+    if(t.id==="annual"||t.id==="comp"){
+      FIXED_YEARS.forEach(function(y){headers.push(t.label+" "+y+" ใช้ไปแล้ว",t.label+" "+y+" โควต้ารวม",t.label+" "+y+" คงเหลือ");});
+    }else{
+      headers.push(t.label+" ใช้ไปแล้ว",t.label+" โควต้ารวม",t.label+" คงเหลือ");
+    }
+  });
+  var rows=getAllUsers().filter(function(u){return canLeave(u.role);}).map(function(u){
     var uid=u._key;
     var deptLabel=(DEPTS[u.dept]&&DEPTS[u.dept].label)||"";
     var compLabel=u.company&&COMPANIES[u.company]?COMPANIES[u.company].label:"";
+    var row=[u.name,u.username,deptLabel,compLabel];
     TYPES.forEach(function(t){
-      function usedDatesFor(matchFn){
-        return getHistory().filter(function(h){return h.userId===uid&&h.type===t.id&&h.status==="approved"&&matchFn(h);}).map(function(h){return h.from+(h.to&&h.to!==h.from?" ถึง "+h.to:"")+" ("+h.days+" "+(h.daysUnit||"วัน")+")";}).join(" | ");
-      }
       if(t.id==="annual"){
-        getAnnualQuotaYears(uid).forEach(function(y){
-          var qv=getAnnualQuotaForYear(uid,y);
-          var dates=usedDatesFor(function(h){return annualYearFromRecord(h)===y;});
-          if(qv.used===0&&qv.total===0&&!dates)return;
-          rows.push([u.name,u.username,deptLabel,compLabel,t.label,"ปี "+y,qv.used,qv.total,qv.total-qv.used,dates]);
-        });
+        FIXED_YEARS.forEach(function(y){var qv=getAnnualQuotaForYear(uid,y);row.push(qv.used,qv.total,qv.total-qv.used);});
       }else if(t.id==="comp"){
-        getCompQuotaYears(uid).forEach(function(y){
-          var qv=getCompQuotaForYear(uid,y);
-          var dates=usedDatesFor(function(h){return compYearFromRecord(h)===y;});
-          if(qv.used===0&&qv.total===0&&!dates)return;
-          rows.push([u.name,u.username,deptLabel,compLabel,t.label,"ปี "+y,qv.used,qv.total,qv.total-qv.used,dates]);
-        });
+        FIXED_YEARS.forEach(function(y){var qv=getCompQuotaForYear(uid,y);row.push(qv.used,qv.total,qv.total-qv.used);});
       }else{
         var qv2=getUserQuota(uid)[t.id]||{used:0,total:0};
-        var dates2=usedDatesFor(function(){return true;});
-        rows.push([u.name,u.username,deptLabel,compLabel,t.label,"",qv2.used,qv2.total,qv2.total-qv2.used,dates2]);
+        row.push(qv2.used,qv2.total,qv2.total-qv2.used);
       }
     });
+    return row;
   });
   dlFile("\uFEFF"+[headers].concat(rows).map(function(r){return r.map(function(c){return "\""+String(c).replace(/"/g,"\"\"")+"\"";}).join(",");}).join("\r\n"),"text/csv","LeaveOS_QuotaReport_"+currentBranch.toUpperCase()+"_"+stamp()+".csv");
 }
