@@ -263,6 +263,7 @@ header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-inde
       <button class="tab-btn active" onclick="supTab('dashboard',this)">📊 ภาพรวม</button>
       <button class="tab-btn" onclick="supTab('request',this)">✏️ ยื่นคำขอลา</button>
       <button class="tab-btn" onclick="supTab('approve',this)">👁️ เห็นชอบการลา</button>
+      <button class="tab-btn" onclick="supTab('calendar',this)">📅 ปฏิทิน</button>
     </div>
     <div id="sup-dashboard">
       <div class="grid3" id="sup-quota-grid"></div>
@@ -334,6 +335,19 @@ header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-inde
         <div id="sup-approve-list"></div>
       </div>
     </div>
+    <div id="sup-calendar-section" class="hidden">
+      <div class="table-card" style="padding:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <button onclick="calNav('sup',-1)" style="width:32px;height:32px;border-radius:8px;border:1.5px solid #eee;background:#fff;cursor:pointer">←</button>
+            <strong id="sup-cal-title" style="font-size:15px;min-width:140px;text-align:center"></strong>
+            <button onclick="calNav('sup',1)" style="width:32px;height:32px;border-radius:8px;border:1.5px solid #eee;background:#fff;cursor:pointer">→</button>
+          </div>
+          <button onclick="calToday('sup')" style="padding:7px 12px;border-radius:8px;border:1.5px solid #eee;background:#fafafa;color:#666;font-size:12px;font-weight:600;cursor:pointer">วันนี้</button>
+        </div>
+        <div id="sup-cal-grid"></div>
+      </div>
+    </div>
   </div>
 
   <!-- Manager -->
@@ -342,6 +356,7 @@ header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-inde
       <button class="tab-btn active" id="mgr-tab-overview" onclick="mgrMainTab('overview',this)">📊 ภาพรวม</button>
       <button class="tab-btn" id="mgr-tab-leave" onclick="mgrMainTab('leave',this)">✏️ ยื่นคำขอลา</button>
       <button class="tab-btn" onclick="mgrMainTab('approve',this)">✅ อนุมัติการลา</button>
+      <button class="tab-btn" onclick="mgrMainTab('calendar',this)">📅 ปฏิทิน</button>
     </div>
     <div id="mgr-overview-section">
       <div class="grid3" id="mgr-quota-grid"></div>
@@ -415,6 +430,19 @@ header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-inde
         <div id="mgr-list"></div>
       </div>
     </div>
+    <div id="mgr-calendar-section" class="hidden">
+      <div class="table-card" style="padding:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <button onclick="calNav('mgr',-1)" style="width:32px;height:32px;border-radius:8px;border:1.5px solid #eee;background:#fff;cursor:pointer">←</button>
+            <strong id="mgr-cal-title" style="font-size:15px;min-width:140px;text-align:center"></strong>
+            <button onclick="calNav('mgr',1)" style="width:32px;height:32px;border-radius:8px;border:1.5px solid #eee;background:#fff;cursor:pointer">→</button>
+          </div>
+          <button onclick="calToday('mgr')" style="padding:7px 12px;border-radius:8px;border:1.5px solid #eee;background:#fafafa;color:#666;font-size:12px;font-weight:600;cursor:pointer">วันนี้</button>
+        </div>
+        <div id="mgr-cal-grid"></div>
+      </div>
+    </div>
   </div>
 
   <!-- Admin -->
@@ -423,6 +451,7 @@ header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-inde
       <button class="tab-btn active" onclick="adminMainTab('leaves',this)">📋 คำขอลา</button>
       <button class="tab-btn" onclick="adminMainTab('employees',this)">👥 จัดการพนักงาน</button>
       <button class="tab-btn" onclick="adminMainTab('holidays',this)">🗓️ วันหยุดชดเชย</button>
+      <button class="tab-btn" onclick="adminMainTab('calendar',this)">📅 ปฏิทิน</button>
     </div>
     <div id="admin-leaves">
       <div class="grid3" id="admin-stats"></div>
@@ -488,6 +517,22 @@ header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-inde
       <div id="admin-holidays-years" class="subtabs" style="margin-bottom:16px"></div>
       <div id="admin-holidays-list" style="display:flex;flex-direction:column;gap:18px"></div>
     </div>
+    <div id="admin-calendar-section" class="hidden">
+      <div class="table-card" style="padding:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <button onclick="calNav('admin',-1)" style="width:32px;height:32px;border-radius:8px;border:1.5px solid #eee;background:#fff;cursor:pointer">←</button>
+            <strong id="admin-cal-title" style="font-size:15px;min-width:140px;text-align:center"></strong>
+            <button onclick="calNav('admin',1)" style="width:32px;height:32px;border-radius:8px;border:1.5px solid #eee;background:#fff;cursor:pointer">→</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <select id="admin-cal-dept" class="field-input" style="width:auto;padding:8px 10px;font-size:12px" onchange="renderLeaveCalendar('admin')"><option value="">ทุกฝ่าย</option></select>
+            <button onclick="calToday('admin')" style="padding:7px 12px;border-radius:8px;border:1.5px solid #eee;background:#fafafa;color:#666;font-size:12px;font-weight:600;cursor:pointer">วันนี้</button>
+          </div>
+        </div>
+        <div id="admin-cal-grid"></div>
+      </div>
+    </div>
   </div>
   <footer style="text-align:center;padding:20px 16px 24px;font-size:11.5px;color:#bbb">พัฒนาโดยฝ่าย IT · Farm Chokchai Group</footer>
 </div>
@@ -545,6 +590,7 @@ header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-inde
     </div>
     <div id="qm-panel-quota">
       <div id="quota-annual-block" style="margin-bottom:12px"></div>
+      <div id="quota-comp-block" style="margin-bottom:12px"></div>
       <div id="quota-fields" style="display:flex;flex-direction:column;gap:10px"></div>
     </div>
     <div id="qm-panel-comp" class="hidden">
@@ -580,6 +626,12 @@ header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-inde
     </div>
     <div id="tg-test-result" style="font-size:12px;margin-top:10px"></div>
     <div class="modal-actions"><button class="btn-cancel" onclick="testTelegram()">ทดสอบส่งข้อความ</button><button class="btn-confirm" onclick="saveTelegramSettings()">บันทึก</button></div>
+  </div>
+</div>
+<div id="cal-day-modal" class="modal-overlay hidden">
+  <div class="modal" style="max-width:380px"><h3 id="cal-day-title">รายชื่อวันหยุด</h3>
+    <div id="cal-day-list" style="display:flex;flex-direction:column;gap:8px;max-height:400px;overflow-y:auto"></div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeModal('cal-day-modal')" style="width:100%">ปิด</button></div>
   </div>
 </div>
 <div id="holiday-modal" class="modal-overlay hidden">
@@ -756,6 +808,77 @@ function hasOneYearTenure(startDate){if(!startDate)return true;var oneYearLater=
 function getAnnualQuotaTotal(startDate){return hasOneYearTenure(startDate)?DEFAULT_QUOTA.annual.total:0;}
 function getCurrentBuddhistYear(){return new Date().getFullYear()+543;}
 function annualYearFromRecord(h){if(h&&h.annualYear)return h.annualYear;var iso=h&&h.from?parseThaiDate(h.from):"";var y=iso?parseInt(iso.split("-")[0]):NaN;return isNaN(y)?getCurrentBuddhistYear():y;}
+
+/* ── Leave calendar (sup/mgr/admin) ── */
+var calState={sup:null,mgr:null,admin:null};
+var THAI_WEEKDAYS=["อา","จ","อ","พ","พฤ","ศ","ส"];
+var THAI_MONTHS_FULL=["","มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+function getCalendarScopeUsers(prefix){
+  if(prefix==="admin"){
+    var deptSel=($("admin-cal-dept")||{value:""}).value;
+    return getAllUsers().filter(function(u){return canLeave(u.role)&&(!deptSel||u.dept===deptSel);});
+  }
+  var dept=currentUser.dept;
+  return getAllUsers().filter(function(u){return canLeave(u.role)&&u.dept===dept;});
+}
+function buildLeaveCalendarMap(scopeUsers){
+  var ids={};scopeUsers.forEach(function(u){ids[u._key]=true;});
+  var map={};
+  getHistory().forEach(function(h){
+    if(h.status!=="approved")return;
+    if(!ids[h.userId])return;
+    var t=TYPES.filter(function(x){return x.id===h.type;})[0];
+    var icon=t?t.icon:"📌";
+    function addDay(iso){if(!iso)return;(map[iso]=map[iso]||[]).push({name:h.employee,label:h.label,icon:icon});}
+    if(h.type==="dayoff"){addDay(parseThaiDate(h.to));return;}
+    if(h.type==="comp"){addDay(h.compHolidayDate||parseThaiDate(h.from));return;}
+    var fISO=parseThaiDate(h.from),tISO=parseThaiDate(h.to)||fISO;
+    if(!fISO)return;
+    var cur=new Date(fISO+"T00:00:00"),end=new Date(tISO+"T00:00:00"),guard=0;
+    while(cur<=end&&guard<400){addDay(cur.toISOString().slice(0,10));cur.setDate(cur.getDate()+1);guard++;}
+  });
+  return map;
+}
+function renderLeaveCalendar(prefix){
+  if(!calState[prefix]){var now=new Date();calState[prefix]={y:now.getFullYear(),m:now.getMonth()};}
+  if(prefix==="admin"&&$("admin-cal-dept")&&$("admin-cal-dept").options.length<=1){
+    $("admin-cal-dept").innerHTML="<option value=''>ทุกฝ่าย</option>"+Object.keys(DEPTS).map(function(d){return "<option value='"+d+"'>"+DEPTS[d].label+"</option>";}).join("");
+  }
+  var y=calState[prefix].y,m=calState[prefix].m;
+  if($(prefix+"-cal-title"))$(prefix+"-cal-title").textContent=THAI_MONTHS_FULL[m+1]+" "+(y+543);
+  var scopeUsers=getCalendarScopeUsers(prefix);
+  var map=buildLeaveCalendarMap(scopeUsers);
+  window["__calMap_"+prefix]=map;
+  var firstDay=new Date(y,m,1),startWeekday=firstDay.getDay(),daysInMonth=new Date(y,m+1,0).getDate();
+  var todayISO=new Date().toISOString().slice(0,10);
+  var cells=[];
+  for(var i=0;i<startWeekday;i++)cells.push("<div></div>");
+  for(var d=1;d<=daysInMonth;d++){
+    var iso=y+"-"+String(m+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");
+    var entries=map[iso]||[];
+    var isToday=iso===todayISO;
+    var chips=entries.slice(0,3).map(function(e){return "<div style='font-size:10px;background:#f5f5f5;border-radius:5px;padding:1px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>"+e.icon+" "+e.name+"</div>";}).join("");
+    var more=entries.length>3?"<div style='font-size:9.5px;color:#999'>+"+(entries.length-3)+" เพิ่มเติม</div>":"";
+    cells.push("<div"+(entries.length?" onclick=\"openCalDayDetail('"+iso+"','"+prefix+"')\"":"")+" style='min-height:78px;border:1px solid "+(isToday?"#1a1a1a":"#f0f0f0")+";border-radius:8px;padding:5px;cursor:"+(entries.length?"pointer":"default")+";background:"+(isToday?"#fafafa":"#fff")+"'><div style='font-size:11px;font-weight:"+(isToday?"700":"500")+";color:"+(isToday?"#1a1a1a":"#999")+";margin-bottom:3px'>"+d+"</div>"+chips+more+"</div>");
+  }
+  if($(prefix+"-cal-grid"))$(prefix+"-cal-grid").innerHTML="<div style='display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px'>"+THAI_WEEKDAYS.map(function(w){return "<div style='text-align:center;font-size:11px;color:#999;font-weight:600'>"+w+"</div>";}).join("")+"</div><div style='display:grid;grid-template-columns:repeat(7,1fr);gap:4px'>"+cells.join("")+"</div>";
+}
+function calNav(prefix,delta){
+  if(!calState[prefix]){var now=new Date();calState[prefix]={y:now.getFullYear(),m:now.getMonth()};}
+  calState[prefix].m+=delta;
+  if(calState[prefix].m<0){calState[prefix].m=11;calState[prefix].y--;}
+  if(calState[prefix].m>11){calState[prefix].m=0;calState[prefix].y++;}
+  renderLeaveCalendar(prefix);
+}
+function calToday(prefix){var now=new Date();calState[prefix]={y:now.getFullYear(),m:now.getMonth()};renderLeaveCalendar(prefix);}
+function openCalDayDetail(iso,prefix){
+  var map=window["__calMap_"+prefix]||{};
+  var entries=map[iso]||[];
+  var p=iso.split("-");
+  $("cal-day-title").textContent="🗓️ "+parseInt(p[2])+" "+MONTHS[parseInt(p[1])]+" "+(parseInt(p[0])+543);
+  $("cal-day-list").innerHTML=entries.length?entries.map(function(e){return "<div style='padding:8px 10px;background:#fafafa;border-radius:8px;border:1px solid #eee'><div style='font-size:13px;font-weight:600'>"+e.icon+" "+e.name+"</div><div style='font-size:11px;color:#888'>"+e.label+"</div></div>";}).join(""):"<p style='color:#bbb;font-size:12.5px'>ไม่มีใครหยุดวันนี้</p>";
+  show("cal-day-modal");
+}
 function buddhistYearFromISO(iso){if(!iso)return getCurrentBuddhistYear();var y=parseInt(iso.split("-")[0]);return isNaN(y)?getCurrentBuddhistYear():y+543;}
 function getAnnualQuotaYears(uid){
   var raw=(quotaData[uid]&&quotaData[uid].annual)||{};
@@ -777,7 +900,24 @@ function getAnnualQuotaForYear(uid,year){
 }
 function getAllUsers(){return Object.entries(usersData).map(function(e){return Object.assign({},e[1],{_key:e[0]});});}
 function getHistory(){return Object.entries(historyData).map(function(e){return Object.assign({},e[1],{_key:e[0]});}).sort(function(a,b){return b.createdAt-a.createdAt;});}
-function getUserQuota(uid,year){var saved=quotaData[uid]||{},def=JSON.parse(JSON.stringify(DEFAULT_QUOTA));var y=year||getCurrentBuddhistYear();Object.keys(def).forEach(function(k){if(k==="annual"){def.annual=getAnnualQuotaForYear(uid,y);return;}if(saved[k])def[k]={used:saved[k].used||0,total:(saved[k].total!==undefined&&saved[k].total!==null)?saved[k].total:def[k].total};});return def;}
+function compYearFromRecord(h){if(h&&h.compHolidayDate){var y=parseInt(h.compHolidayDate.split("-")[0]);if(!isNaN(y))return y;}return getCurrentBuddhistYear();}
+function getCompQuotaYears(uid){
+  var raw=(quotaData[uid]&&quotaData[uid].comp)||{};
+  var ys={};ys[getCurrentBuddhistYear()]=1;
+  getHolidayYears().forEach(function(y){ys[y]=1;});
+  if(!(raw.used!==undefined||raw.total!==undefined)){Object.keys(raw).forEach(function(y){ys[y]=1;});}
+  return Object.keys(ys).map(Number).sort(function(a,b){return a-b;});
+}
+function getCompQuotaForYear(uid,year){
+  var raw=(quotaData[uid]&&quotaData[uid].comp)||{};
+  var defTotal=DEFAULT_QUOTA.comp.total;
+  if(raw.used!==undefined||raw.total!==undefined){
+    return year===getCurrentBuddhistYear()?{used:raw.used||0,total:(raw.total!==undefined&&raw.total!==null)?raw.total:defTotal}:{used:0,total:defTotal};
+  }
+  var y=raw[year];
+  return y?{used:y.used||0,total:(y.total!==undefined&&y.total!==null)?y.total:defTotal}:{used:0,total:defTotal};
+}
+function getUserQuota(uid,year){var saved=quotaData[uid]||{},def=JSON.parse(JSON.stringify(DEFAULT_QUOTA));var y=year||getCurrentBuddhistYear();Object.keys(def).forEach(function(k){if(k==="annual"){def.annual=getAnnualQuotaForYear(uid,y);return;}if(k==="comp"){def.comp=getCompQuotaForYear(uid,y);return;}if(saved[k])def[k]={used:saved[k].used||0,total:(saved[k].total!==undefined&&saved[k].total!==null)?saved[k].total:def[k].total};});return def;}
 function saveSession(u){try{localStorage.setItem("lOS_u",JSON.stringify(u));}catch(e){}}
 function loadSession(){try{var d=localStorage.getItem("lOS_u");return d?JSON.parse(d):null;}catch(e){return null;}}
 function clearSession(){try{localStorage.removeItem("lOS_u");}catch(e){}}
@@ -1148,7 +1288,7 @@ function setPeriod(p){ST.emp.period=p;updatePeriodBtnStyle("emp",p);resetTimeBtn
 function selectHolidayYear(y){ST.emp.holidayYear=y;setYearBtn(y,"btn-year-68","btn-year-69");buildHolidayDropdown(y,"f-comp-holiday");updateSubmitBtn();}
 
 /* ── Supervisor view ── */
-function supTab(tab,btn){document.querySelectorAll("#view-supervisor .tab-btn").forEach(function(b){b.classList.remove("active");});btn.classList.add("active");hide("sup-dashboard");hide("sup-request");hide("sup-approve-section");if(tab==="dashboard"){show("sup-dashboard");renderSupDashboard();}else if(tab==="request"){show("sup-request");buildTypeButtons("sup-type-btns",ST.sup.type,null);buildSubtypeUI("sup",ST.sup.type,ST.sup.sub,"supSelectSubtype");supUpdateSubmitBtn();}else{show("sup-approve-section");renderSupApprove();}}
+function supTab(tab,btn){document.querySelectorAll("#view-supervisor .tab-btn").forEach(function(b){b.classList.remove("active");});btn.classList.add("active");hide("sup-dashboard");hide("sup-request");hide("sup-approve-section");hide("sup-calendar-section");if(tab==="dashboard"){show("sup-dashboard");renderSupDashboard();}else if(tab==="request"){show("sup-request");buildTypeButtons("sup-type-btns",ST.sup.type,null);buildSubtypeUI("sup",ST.sup.type,ST.sup.sub,"supSelectSubtype");supUpdateSubmitBtn();}else if(tab==="approve"){show("sup-approve-section");renderSupApprove();}else{show("sup-calendar-section");renderLeaveCalendar("sup");}}
 function renderSupDashboard(){if(!currentUser||currentUser.role!=="supervisor")return;var q=getUserQuota(currentUser._key);$("sup-quota-grid").innerHTML=buildQuotaCards(q,currentUser._key);var mine=getHistory().filter(function(h){return h.userId===currentUser._key;});$("sup-history-count").textContent=mine.length+" รายการ";$("sup-history-list").innerHTML=buildHistoryList(mine,"view");}
 function supStatusTab(tab,btn){supStatusTabState=tab;document.querySelectorAll("#sup-approve-section .subtab").forEach(function(b){b.classList.remove("active");});btn.classList.add("active");renderSupApprove();}
 function renderSupApprove(){
@@ -1174,7 +1314,7 @@ function supSetPeriod(p){ST.sup.period=p;updatePeriodBtnStyle("sup",p);removeSin
 function supSelectHolidayYear(y){ST.sup.holidayYear=y;setYearBtn(y,"sup-btn-year-68","sup-btn-year-69");buildHolidayDropdown(y,"sup-f-comp-holiday");supUpdateSubmitBtn();}
 
 /* ── Manager view ── */
-function mgrMainTab(tab,btn){document.querySelectorAll("#view-manager > .tabs .tab-btn").forEach(function(b){b.classList.remove("active");});btn.classList.add("active");hide("mgr-overview-section");hide("mgr-leave-section");hide("mgr-approve-section");if(tab==="overview"){show("mgr-overview-section");renderMgrOverview();}else if(tab==="leave"){show("mgr-leave-section");buildTypeButtons("mgr-type-btns",ST.mgr.type,null);buildSubtypeUI("mgr",ST.mgr.type,ST.mgr.sub,"mgrSelectSubtype");mgrUpdateSubmitBtn();showTimeRange("mgr");}else{show("mgr-approve-section");renderApprove();}}
+function mgrMainTab(tab,btn){document.querySelectorAll("#view-manager > .tabs .tab-btn").forEach(function(b){b.classList.remove("active");});btn.classList.add("active");hide("mgr-overview-section");hide("mgr-leave-section");hide("mgr-approve-section");hide("mgr-calendar-section");if(tab==="overview"){show("mgr-overview-section");renderMgrOverview();}else if(tab==="leave"){show("mgr-leave-section");buildTypeButtons("mgr-type-btns",ST.mgr.type,null);buildSubtypeUI("mgr",ST.mgr.type,ST.mgr.sub,"mgrSelectSubtype");mgrUpdateSubmitBtn();showTimeRange("mgr");}else if(tab==="approve"){show("mgr-approve-section");renderApprove();}else{show("mgr-calendar-section");renderLeaveCalendar("mgr");}}
 function mgrStatusTab(tab,btn){mgrStatusTabState=tab;document.querySelectorAll("#mgr-approve-section .subtab").forEach(function(b){b.classList.remove("active");});btn.classList.add("active");renderApprove();}
 function renderMgrOverview(){if(!currentUser||!isManagerLevel(currentUser.role)||currentUser.role==="admin")return;if(!canLeave(currentUser.role)){$("mgr-quota-grid").innerHTML="";$("mgr-history-list").innerHTML="<div class='empty'>Role นี้ไม่สามารถยื่นลาได้</div>";return;}var q=getUserQuota(currentUser._key);$("mgr-quota-grid").innerHTML=buildQuotaCards(q,currentUser._key);var mine=getHistory().filter(function(h){return h.userId===currentUser._key;});$("mgr-history-count").textContent=mine.length+" รายการ";$("mgr-history-list").innerHTML=buildHistoryList(mine,"view");}
 function renderApprove(){
@@ -1305,7 +1445,7 @@ async function submitLeave(prefix){
 }
 
 /* ── Admin leaves ── */
-function adminMainTab(tab,btn){document.querySelectorAll("#view-admin > .tabs .tab-btn").forEach(function(b){b.classList.remove("active");});btn.classList.add("active");hide("admin-leaves");hide("admin-employees");hide("admin-holidays");if(tab==="leaves")show("admin-leaves");else if(tab==="employees")show("admin-employees");else{show("admin-holidays");renderAdminHolidays();}}
+function adminMainTab(tab,btn){document.querySelectorAll("#view-admin > .tabs .tab-btn").forEach(function(b){b.classList.remove("active");});btn.classList.add("active");hide("admin-leaves");hide("admin-employees");hide("admin-holidays");hide("admin-calendar-section");if(tab==="leaves")show("admin-leaves");else if(tab==="employees")show("admin-employees");else if(tab==="holidays"){show("admin-holidays");renderAdminHolidays();}else{show("admin-calendar-section");renderLeaveCalendar("admin");}}
 function adminStatusTab(tab,btn){adminLeaveTabState=tab;document.querySelectorAll("#admin-leaves .subtab").forEach(function(b){b.classList.remove("active");});btn.classList.add("active");renderLeaves();}
 function renderLeaves(){
   if(!currentUser||currentUser.role!=="admin")return;
@@ -1346,6 +1486,11 @@ async function approveItem(key,userId,qk,days,unit){
     await refQuota().child(userId+"/annual/"+year+"/used").set((cur.used||0)+Number(days));
     return;
   }
+  if(qk==="comp"){
+    var cyear=compYearFromRecord(h),qc=getUserQuota(userId,cyear),curc=qc.comp||{used:0,total:0};
+    await refQuota().child(userId+"/comp/"+cyear+"/used").set((curc.used||0)+Number(days));
+    return;
+  }
   var q2=getUserQuota(userId),cur2=q2[qk]||{used:0,total:0};
   await refQuota().child(userId+"/"+qk+"/used").set((cur2.used||0)+Number(days));
 }
@@ -1374,6 +1519,13 @@ async function confirmCancel(){
         if(wasCounted){var qO=getUserQuota(item.userId,oldYear),cO=qO.annual||{used:0,total:0};await refQuota().child(item.userId+"/annual/"+oldYear+"/used").set(Math.max(0,(cO.used||0)-Number(oldDays)));}
         if(willBeCounted){var qN=getUserQuota(item.userId,newYear),cN=qN.annual||{used:0,total:0};await refQuota().child(item.userId+"/annual/"+newYear+"/used").set((cN.used||0)+Number(newDays));}
       }
+    }else if(qk==="comp"){
+      var cYear=compYearFromRecord(item);
+      var qC=getUserQuota(item.userId,cYear),curC=qC.comp||{used:0,total:0},usedNowC=curC.used||0;
+      if(wasCounted&&!willBeCounted)usedNowC=Math.max(0,usedNowC-Number(oldDays));
+      else if(!wasCounted&&willBeCounted)usedNowC=usedNowC+Number(newDays);
+      else if(wasCounted&&willBeCounted&&Number(newDays)!==Number(oldDays))usedNowC=Math.max(0,usedNowC-Number(oldDays)+Number(newDays));
+      if(wasCounted||willBeCounted)await refQuota().child(item.userId+"/comp/"+cYear+"/used").set(usedNowC);
     }else{
       var q=getUserQuota(item.userId),cur=q[qk]||{used:0,total:0},usedNow=cur.used||0;
       if(wasCounted&&!willBeCounted)usedNow=Math.max(0,usedNow-Number(oldDays));
@@ -1395,7 +1547,7 @@ function renderEmpTable(){
   tb.innerHTML=all.length?all.map(function(u){var tenure=u.startDate?calcTenure(u.startDate):"",ci=u.company&&COMPANIES[u.company]?COMPANIES[u.company]:null;return "<tr><td><div style='font-weight:600'>"+u.name+"</div>"+(tenure?"<div style='font-size:11px;color:#aaa'>อายุงาน "+tenure+"</div>":"")+"</td><td style='font-family:monospace;font-size:12px;color:#666'>"+u.username+"</td><td>"+(u.position||"—")+"</td><td>"+(u.dept?deptPill(u.dept):"—")+"</td><td>"+(ci?"<span class='company-pill' style='color:"+ci.color+";background:"+ci.bg+";border-color:"+ci.border+"'>"+ci.short+"</span>":"—")+"</td><td><select onchange=\"changeRole('"+u._key+"',this.value)\" style='padding:4px 8px;border-radius:8px;border:1.5px solid #e8e8e8;font-size:12px;font-weight:600;color:"+ROLE_COLOR[u.role]+";background:#fafafa;cursor:pointer;outline:none'>"+Object.entries(ROLE_LABEL).map(function(e){return "<option value='"+e[0]+"'"+(u.role===e[0]?" selected":"")+">"+e[1]+"</option>";}).join("")+"</select></td><td style='white-space:nowrap'><button class='btn-edit' onclick=\"openEmpModal('"+u._key+"')\">✏️</button> <button class='btn-edit' style='border-color:#bfdbfe;color:#1e40af' onclick=\"openQuotaModal('"+u._key+"')\">📅</button>"+(canLeave(u.role)?" <button class='btn-edit' style='border-color:#ddd6fe;color:#6d28d9' onclick=\"openApproverModal('"+u._key+"')\" title='กำหนดผู้อนุมัติ'>👥</button>":"")+(u._key!==currentUser._key?" <button class='btn-del' onclick=\"openDelModal('"+u._key+"','"+u.name+"')\">🗑️</button>":"")+"</td></tr>";}).join(""):"<tr><td colspan='7' style='text-align:center;color:#bbb;padding:32px'>ไม่พบพนักงาน</td></tr>";
 }
 function openEmpModal(key){empEditId=key;$("em-err").classList.add("hidden");if(key){var u=usersData[key];if(!u)return;$("emp-modal-title").textContent="แก้ไขข้อมูลพนักงาน";$("em-name").value=u.name||"";$("em-username").value=u.username||"";$("em-password").value=u.password||"";$("em-position").value=u.position||"";$("em-startdate").value=u.startDate||"";$("em-dept").value=u.dept||"steak";$("em-role").value=u.role||"employee";$("em-custom-label").value=u.customRoleLabel||"";$("em-company").value=u.company||"";$("em-telegram").value=u.telegramChatId||"";}else{$("emp-modal-title").textContent="เพิ่มพนักงานใหม่";["em-name","em-username","em-password","em-position","em-startdate","em-custom-label","em-telegram"].forEach(function(id){$(id).value="";});$("em-dept").value="steak";$("em-role").value="employee";$("em-company").value="";}show("emp-modal");}
-async function saveEmployee(){var name=($("em-name").value||"").trim(),username=($("em-username").value||"").trim(),password=($("em-password").value||"").trim(),position=($("em-position").value||"").trim(),startDate=$("em-startdate").value||"",dept=$("em-dept").value||"steak",role=$("em-role").value||"employee",customRoleLabel=($("em-custom-label").value||"").trim(),company=$("em-company").value||"",telegramChatId=($("em-telegram").value||"").trim();if(!name||!username||!password){$("em-err-text").textContent="กรุณากรอกชื่อ Username และรหัสผ่าน";show("em-err");return;}var snap=await refUsers().once("value"),all=snap.val()||{};if(Object.entries(all).filter(function(e){return e[1].username===username&&e[0]!==empEditId;}).length){$("em-err-text").textContent="Username นี้ถูกใช้แล้ว";show("em-err");return;}var data={name:name,username:username,password:password,position:position,startDate:startDate,dept:role==="admin"?null:dept,role:role,avatar:name[0],color:ROLE_COLOR[role]||"#1a1a1a",customRoleLabel:customRoleLabel,company:company,telegramChatId:telegramChatId};if(empEditId){await refUser(empEditId).update(data);}else{var nk=refUsers().push().key;await refUser(nk).set(data);if(canLeave(role)){var initQuota=JSON.parse(JSON.stringify(DEFAULT_QUOTA));var cy0=getCurrentBuddhistYear();initQuota.annual={};initQuota.annual[cy0]={used:0,total:getAnnualQuotaTotal(startDate)};await refQuota().child(nk).set(initQuota);}}closeModal("emp-modal");}
+async function saveEmployee(){var name=($("em-name").value||"").trim(),username=($("em-username").value||"").trim(),password=($("em-password").value||"").trim(),position=($("em-position").value||"").trim(),startDate=$("em-startdate").value||"",dept=$("em-dept").value||"steak",role=$("em-role").value||"employee",customRoleLabel=($("em-custom-label").value||"").trim(),company=$("em-company").value||"",telegramChatId=($("em-telegram").value||"").trim();if(!name||!username||!password){$("em-err-text").textContent="กรุณากรอกชื่อ Username และรหัสผ่าน";show("em-err");return;}var snap=await refUsers().once("value"),all=snap.val()||{};if(Object.entries(all).filter(function(e){return e[1].username===username&&e[0]!==empEditId;}).length){$("em-err-text").textContent="Username นี้ถูกใช้แล้ว";show("em-err");return;}var data={name:name,username:username,password:password,position:position,startDate:startDate,dept:role==="admin"?null:dept,role:role,avatar:name[0],color:ROLE_COLOR[role]||"#1a1a1a",customRoleLabel:customRoleLabel,company:company,telegramChatId:telegramChatId};if(empEditId){await refUser(empEditId).update(data);}else{var nk=refUsers().push().key;await refUser(nk).set(data);if(canLeave(role)){var initQuota=JSON.parse(JSON.stringify(DEFAULT_QUOTA));var cy0=getCurrentBuddhistYear();initQuota.annual={};initQuota.annual[cy0]={used:0,total:getAnnualQuotaTotal(startDate)};initQuota.comp={};initQuota.comp[cy0]={used:0,total:DEFAULT_QUOTA.comp.total};await refQuota().child(nk).set(initQuota);}}closeModal("emp-modal");}
 function changeRole(key,newRole){refUser(key).update({role:newRole,color:ROLE_COLOR[newRole]||"#1a1a1a"});}
 function openDelModal(key,name){delTargetId=key;$("del-emp-name").textContent=name;show("del-modal");}
 async function confirmDelete(){if(!delTargetId)return;await refUser(delTargetId).remove();closeModal("del-modal");delTargetId=null;}
@@ -1407,8 +1559,26 @@ function switchQuotaTab(tab){
   $("qm-tab-btn-quota").classList.toggle("active",tab==="quota");
   $("qm-tab-btn-comp").classList.toggle("active",tab==="comp");
 }
-var quotaAnnualYearState=null;
-function openQuotaModal(key){quotaEditId=key;var u=usersData[key];if(!u)return;switchQuotaTab("quota");$("quota-modal-name").textContent="👤 "+u.name+" · "+(u.position||"");quotaAnnualYearState=null;renderAnnualQuotaBlock(key);$("quota-fields").innerHTML=TYPES.filter(function(t){return t.id!=="annual";}).map(function(t){var qv=getUserQuota(key)[t.id]||{used:0,total:0};return "<div style='display:grid;grid-template-columns:1fr 100px 100px;align-items:center;gap:10px;padding:10px 12px;background:#fafafa;border-radius:10px;border:1px solid #eee'><div style='display:flex;align-items:center;gap:8px'><span>"+t.icon+"</span><span style='font-size:13px'>"+t.label+"</span></div><div><label style='font-size:10px;color:#999;display:block;margin-bottom:3px'>ใช้ไปแล้ว</label><input type='number' id='q-used-"+t.id+"' value='"+qv.used+"' min='0' step='0.5' class='field-input' style='padding:6px;font-size:13px;text-align:center'></div><div><label style='font-size:10px;color:#999;display:block;margin-bottom:3px'>โควต้ารวม</label><input type='number' id='q-total-"+t.id+"' value='"+qv.total+"' min='0' step='0.5' class='field-input' style='padding:6px;font-size:13px;text-align:center'></div></div>";}).join("");renderCompHolidayFields(key);show("quota-modal");}
+var quotaAnnualYearState=null,quotaCompYearState=null;
+function openQuotaModal(key){quotaEditId=key;var u=usersData[key];if(!u)return;switchQuotaTab("quota");$("quota-modal-name").textContent="👤 "+u.name+" · "+(u.position||"");quotaAnnualYearState=null;quotaCompYearState=null;renderAnnualQuotaBlock(key);renderCompQuotaBlock(key);$("quota-fields").innerHTML=TYPES.filter(function(t){return t.id!=="annual"&&t.id!=="comp";}).map(function(t){var qv=getUserQuota(key)[t.id]||{used:0,total:0};return "<div style='display:grid;grid-template-columns:1fr 100px 100px;align-items:center;gap:10px;padding:10px 12px;background:#fafafa;border-radius:10px;border:1px solid #eee'><div style='display:flex;align-items:center;gap:8px'><span>"+t.icon+"</span><span style='font-size:13px'>"+t.label+"</span></div><div><label style='font-size:10px;color:#999;display:block;margin-bottom:3px'>ใช้ไปแล้ว</label><input type='number' id='q-used-"+t.id+"' value='"+qv.used+"' min='0' step='0.5' class='field-input' style='padding:6px;font-size:13px;text-align:center'></div><div><label style='font-size:10px;color:#999;display:block;margin-bottom:3px'>โควต้ารวม</label><input type='number' id='q-total-"+t.id+"' value='"+qv.total+"' min='0' step='0.5' class='field-input' style='padding:6px;font-size:13px;text-align:center'></div></div>";}).join("");renderCompHolidayFields(key);show("quota-modal");}
+function renderCompQuotaBlock(key){
+  var years=getCompQuotaYears(key);
+  if(quotaCompYearState===null||years.indexOf(quotaCompYearState)===-1)quotaCompYearState=getCurrentBuddhistYear();
+  var tabsHTML=years.map(function(y){return "<button class='subtab"+(y===quotaCompYearState?" active":"")+"' onclick=\"selectQuotaCompYear("+y+")\">ปี "+y+"</button>";}).join("");
+  var yearBlocks=years.map(function(y){
+    var qv=getCompQuotaForYear(key,y);
+    return "<div id='quota-comp-year-"+y+"' style='display:"+(y===quotaCompYearState?"grid":"none")+";grid-template-columns:1fr 1fr;gap:10px'><div><label style='font-size:10px;color:#999;display:block;margin-bottom:3px'>ใช้ไปแล้ว</label><input type='number' id='q-comp-used-"+y+"' value='"+qv.used+"' min='0' step='0.5' class='field-input' style='padding:6px;font-size:13px;text-align:center'></div><div><label style='font-size:10px;color:#999;display:block;margin-bottom:3px'>โควต้ารวม</label><input type='number' id='q-comp-total-"+y+"' value='"+qv.total+"' min='0' step='0.5' class='field-input' style='padding:6px;font-size:13px;text-align:center'></div></div>";
+  }).join("");
+  $("quota-comp-block").innerHTML="<div style='padding:12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px'><div style='display:flex;align-items:center;gap:8px;margin-bottom:8px'><span>🔄</span><strong style='font-size:13px'>ลาชดเชย (แยกตามปี)</strong></div><div class='subtabs' style='margin-bottom:10px'>"+tabsHTML+"</div>"+yearBlocks+"</div>";
+}
+function selectQuotaCompYear(y){
+  quotaCompYearState=y;
+  document.querySelectorAll("[id^='quota-comp-year-']").forEach(function(el){el.style.display=(el.id==="quota-comp-year-"+y)?"grid":"none";});
+  var years=getCompQuotaYears(quotaEditId);
+  var btns=document.querySelectorAll("#quota-comp-block .subtabs .subtab");
+  btns.forEach(function(b){b.classList.remove("active");});
+  years.forEach(function(yr,i){if(yr===y&&btns[i])btns[i].classList.add("active");});
+}
 function renderAnnualQuotaBlock(key){
   var years=getAnnualQuotaYears(key);
   if(quotaAnnualYearState===null||years.indexOf(quotaAnnualYearState)===-1)quotaAnnualYearState=getCurrentBuddhistYear();
@@ -1469,10 +1639,13 @@ function toggleCompUnlimited(){
 function selectAllCompHolidays(val){document.querySelectorAll("#comp-year-"+compHolidayYearState+" .comp-holiday-cb").forEach(function(cb){cb.checked=val;styleCompRow(cb.parentNode);});}
 async function saveQuota(){
   if(!quotaEditId)return;
-  var upd={};TYPES.filter(function(t){return t.id!=="annual";}).forEach(function(t){upd[t.id]={used:parseFloat(($("q-used-"+t.id)||{value:"0"}).value)||0,total:parseFloat(($("q-total-"+t.id)||{value:"0"}).value)||0};});
+  var upd={};TYPES.filter(function(t){return t.id!=="annual"&&t.id!=="comp";}).forEach(function(t){upd[t.id]={used:parseFloat(($("q-used-"+t.id)||{value:"0"}).value)||0,total:parseFloat(($("q-total-"+t.id)||{value:"0"}).value)||0};});
   var years=getAnnualQuotaYears(quotaEditId),annualObj={};
   years.forEach(function(y){var uInp=$("q-annual-used-"+y),tInp=$("q-annual-total-"+y),eInp=$("q-annual-eligible-"+y);annualObj[y]={used:uInp?(parseFloat(uInp.value)||0):0,total:tInp?(parseFloat(tInp.value)||0):0,eligible:eInp?!!eInp.checked:true};});
   upd.annual=annualObj;
+  var compYears=getCompQuotaYears(quotaEditId),compQuotaObj={};
+  compYears.forEach(function(y){var uInp=$("q-comp-used-"+y),tInp=$("q-comp-total-"+y);compQuotaObj[y]={used:uInp?(parseFloat(uInp.value)||0):0,total:tInp?(parseFloat(tInp.value)||0):0};});
+  upd.comp=compQuotaObj;
   await refQuota().child(quotaEditId).set(upd);
   var unlimited=$("comp-unlimited").checked,compData={_unlimited:unlimited};
   if(!unlimited){document.querySelectorAll(".comp-holiday-cb").forEach(function(cb){if(cb.checked)compData[cb.dataset.date]=true;});}
@@ -1625,7 +1798,7 @@ function addHolidayYear(){
 }
 
 /* ── Sync quota ── */
-async function syncQuotaDefaults(){if(!confirm("อัปเดตโควต้าวันลาให้พนักงานทุกคนตามเงื่อนไขใหม่?\n(รวมกฎ: พนักงานอายุงานไม่ถึง 1 ปี จะได้โควต้าลาพักร้อน = 0 โดยอัตโนมัติ)"))return;var uSnap=await refUsers().once("value"),uAll=uSnap.val()||{},qSnap=await refQuota().once("value"),qAll=qSnap.val()||{},upd={};var cyS=getCurrentBuddhistYear();Object.entries(uAll).forEach(function(e){var k=e[0],u=e[1];if(!canLeave(u.role))return;var cur=qAll[k]||{},merged={};Object.keys(DEFAULT_QUOTA).forEach(function(type){var def=DEFAULT_QUOTA[type],saved=cur[type]||{};if(type==="annual"){var existingAnnual={};if(saved.used!==undefined||saved.total!==undefined){existingAnnual[cyS]={used:saved.used||0,total:saved.total,eligible:saved.eligible!==undefined?!!saved.eligible:undefined};}else{existingAnnual=Object.assign({},saved);}var prevY=existingAnnual[cyS]||{};existingAnnual[cyS]={used:prevY.used||0,total:getAnnualQuotaTotal(u.startDate),eligible:prevY.eligible!==undefined?prevY.eligible:hasOneYearTenure(u.startDate)};merged.annual=existingAnnual;return;}merged[type]={used:saved.used||0,total:(saved.total&&saved.total>=def.total)?saved.total:def.total};});upd[k]=merged;});if(Object.keys(upd).length){await refQuota().update(upd);alert("✅ อัปเดตโควต้าเรียบร้อย "+Object.keys(upd).length+" คน");}}
+async function syncQuotaDefaults(){if(!confirm("อัปเดตโควต้าวันลาให้พนักงานทุกคนตามเงื่อนไขใหม่?\n(รวมกฎ: พนักงานอายุงานไม่ถึง 1 ปี จะได้โควต้าลาพักร้อน = 0 โดยอัตโนมัติ)"))return;var uSnap=await refUsers().once("value"),uAll=uSnap.val()||{},qSnap=await refQuota().once("value"),qAll=qSnap.val()||{},upd={};var cyS=getCurrentBuddhistYear();Object.entries(uAll).forEach(function(e){var k=e[0],u=e[1];if(!canLeave(u.role))return;var cur=qAll[k]||{},merged={};Object.keys(DEFAULT_QUOTA).forEach(function(type){var def=DEFAULT_QUOTA[type],saved=cur[type]||{};if(type==="annual"){var existingAnnual={};if(saved.used!==undefined||saved.total!==undefined){existingAnnual[cyS]={used:saved.used||0,total:saved.total,eligible:saved.eligible!==undefined?!!saved.eligible:undefined};}else{existingAnnual=Object.assign({},saved);}var prevY=existingAnnual[cyS]||{};existingAnnual[cyS]={used:prevY.used||0,total:getAnnualQuotaTotal(u.startDate),eligible:prevY.eligible!==undefined?prevY.eligible:hasOneYearTenure(u.startDate)};merged.annual=existingAnnual;return;}if(type==="comp"){var existingComp={};if(saved.used!==undefined||saved.total!==undefined){existingComp[cyS]={used:saved.used||0,total:saved.total};}else{existingComp=Object.assign({},saved);}var prevC=existingComp[cyS]||{};existingComp[cyS]={used:prevC.used||0,total:(prevC.total&&prevC.total>=def.total)?prevC.total:def.total};merged.comp=existingComp;return;}merged[type]={used:saved.used||0,total:(saved.total&&saved.total>=def.total)?saved.total:def.total};});upd[k]=merged;});if(Object.keys(upd).length){await refQuota().update(upd);alert("✅ อัปเดตโควต้าเรียบร้อย "+Object.keys(upd).length+" คน");}}
 
 /* ── Copy employees ── */
 async function openCopyEmpModal(){$("copy-search").value="";$("copy-result").classList.add("hidden");$("copy-from-branch").value=currentBranch==="farm"?"ho":"farm";$("copy-to-branch").value=currentBranch;await loadCopySourceEmps();show("copy-emp-modal");}
@@ -1675,6 +1848,13 @@ function exportQuotaReport(){
         getAnnualQuotaYears(uid).forEach(function(y){
           var qv=getAnnualQuotaForYear(uid,y);
           var dates=usedDatesFor(function(h){return annualYearFromRecord(h)===y;});
+          if(qv.used===0&&qv.total===0&&!dates)return;
+          rows.push([u.name,u.username,deptLabel,compLabel,t.label,"ปี "+y,qv.used,qv.total,qv.total-qv.used,dates]);
+        });
+      }else if(t.id==="comp"){
+        getCompQuotaYears(uid).forEach(function(y){
+          var qv=getCompQuotaForYear(uid,y);
+          var dates=usedDatesFor(function(h){return compYearFromRecord(h)===y;});
           if(qv.used===0&&qv.total===0&&!dates)return;
           rows.push([u.name,u.username,deptLabel,compLabel,t.label,"ปี "+y,qv.used,qv.total,qv.total-qv.used,dates]);
         });
