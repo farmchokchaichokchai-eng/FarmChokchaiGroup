@@ -962,7 +962,8 @@ function buildHolidayDropdown(year,selId,uid){
   var used=uid2?getUsedCompDates(uid2):new Map();
   var allowed=uid2?(allowedHolidaysData[uid2]||null):null;
   var unlimited=!allowed||allowed._unlimited===true;
-  list.forEach(function(h){var p=h.date.split("-"),opt=document.createElement("option");opt.value=h.date+"|"+h.day+"|"+h.name;var lbl=h.name+" — "+h.day+" "+parseInt(p[2])+" "+MONTHS[parseInt(p[1])]+" "+year;var isOk=unlimited||!!(allowed&&allowed[h.date]);var usedDays=used.get(h.date)||0;if(usedDays>=1){opt.disabled=true;opt.textContent="✓ ใช้แล้ว — "+lbl;opt.style.color="#bbb";}else if(!isOk){opt.disabled=true;opt.textContent="🔒 ไม่ได้รับสิทธิ์ — "+lbl;opt.style.color="#bbb";}else opt.textContent=(usedDays>0?"🌗 ใช้ไปแล้ว 0.5 วัน (เหลือ 0.5 วัน) — ":"")+lbl;newSel.appendChild(opt);});
+  var todayISO=new Date().toISOString().slice(0,10);
+  list.forEach(function(h){var p=h.date.split("-"),opt=document.createElement("option");opt.value=h.date+"|"+h.day+"|"+h.name;var lbl=h.name+" — "+h.day+" "+parseInt(p[2])+" "+MONTHS[parseInt(p[1])]+" "+year;var isOk=unlimited||!!(allowed&&allowed[h.date]);var usedDays=used.get(h.date)||0;var gregISO=(parseInt(p[0])-543)+"-"+p[1]+"-"+p[2];var isFuture=gregISO>todayISO;if(usedDays>=1){opt.disabled=true;opt.textContent="✓ ใช้แล้ว — "+lbl;opt.style.color="#bbb";}else if(isFuture){opt.disabled=true;opt.textContent="⏳ ยังไม่ถึงวันหยุดนี้ — "+lbl;opt.style.color="#bbb";}else if(!isOk){opt.disabled=true;opt.textContent="🔒 ไม่ได้รับสิทธิ์ — "+lbl;opt.style.color="#bbb";}else opt.textContent=(usedDays>0?"🌗 ใช้ไปแล้ว 0.5 วัน (เหลือ 0.5 วัน) — ":"")+lbl;newSel.appendChild(opt);});
   oldSel.parentNode.replaceChild(newSel,oldSel);
 }
 
@@ -1375,6 +1376,14 @@ async function submitLeave(prefix){
   var dayoffDate=isDayoff?($(pre+"f-dayoff")?$(pre+"f-dayoff").value:null):null;
   var compVal=isComp&&$(pre+"f-comp-holiday")?$(pre+"f-comp-holiday").value:"";
   if(isDayoff&&!dayoffDate)return;if(isComp&&!compVal)return;
+  if(isComp&&compVal){
+    var cpChk=compVal.split("|")[0].split("-");
+    var gregISOchk=(parseInt(cpChk[0])-543)+"-"+cpChk[1]+"-"+cpChk[2];
+    if(gregISOchk>new Date().toISOString().slice(0,10)){
+      alert("⚠️ ไม่สามารถลาชดเชยล่วงหน้าได้\n\nสามารถลาชดเชยได้เฉพาะวันหยุดนักขัตฤกษ์ที่ผ่านมาแล้วหรือวันนี้เท่านั้น");
+      return;
+    }
+  }
   if(!isDayoff&&!isComp&&!timeMode&&per==="full"&&!to)return;
   var isHalf=!isDayoff&&!isComp&&!timeMode&&per!=="full";
   if(!timeMode)days=(isDayoff||isComp)?(per!=="full"?0.5:1):isHalf?0.5:Math.max(1,Math.round((new Date(to)-new Date(from))/86400000)+1);
@@ -1561,10 +1570,17 @@ function switchQuotaTab(tab){
 }
 var quotaAnnualYearState=null,quotaCompYearState=null;
 function openQuotaModal(key){quotaEditId=key;var u=usersData[key];if(!u)return;switchQuotaTab("quota");$("quota-modal-name").textContent="👤 "+u.name+" · "+(u.position||"");quotaAnnualYearState=null;quotaCompYearState=null;renderAnnualQuotaBlock(key);renderCompQuotaBlock(key);$("quota-fields").innerHTML=TYPES.filter(function(t){return t.id!=="annual"&&t.id!=="comp";}).map(function(t){var qv=getUserQuota(key)[t.id]||{used:0,total:0};return "<div style='display:grid;grid-template-columns:1fr 100px 100px;align-items:center;gap:10px;padding:10px 12px;background:#fafafa;border-radius:10px;border:1px solid #eee'><div style='display:flex;align-items:center;gap:8px'><span>"+t.icon+"</span><span style='font-size:13px'>"+t.label+"</span></div><div><label style='font-size:10px;color:#999;display:block;margin-bottom:3px'>ใช้ไปแล้ว</label><input type='number' id='q-used-"+t.id+"' value='"+qv.used+"' min='0' step='0.5' class='field-input' style='padding:6px;font-size:13px;text-align:center'></div><div><label style='font-size:10px;color:#999;display:block;margin-bottom:3px'>โควต้ารวม</label><input type='number' id='q-total-"+t.id+"' value='"+qv.total+"' min='0' step='0.5' class='field-input' style='padding:6px;font-size:13px;text-align:center'></div></div>";}).join("");renderCompHolidayFields(key);show("quota-modal");}
+async function deleteEmployeeQuotaYear(type,year){
+  if(!quotaEditId)return;
+  if(!confirm("ลบข้อมูลปี "+year+" ("+(type==="annual"?"ลาพักร้อน":"ลาชดเชย")+") ของพนักงานคนนี้?"))return;
+  await refQuota().child(quotaEditId+"/"+type+"/"+year).remove();
+  if(type==="annual"){quotaAnnualYearState=null;renderAnnualQuotaBlock(quotaEditId);}
+  else{quotaCompYearState=null;renderCompQuotaBlock(quotaEditId);}
+}
 function renderCompQuotaBlock(key){
   var years=getCompQuotaYears(key);
   if(quotaCompYearState===null||years.indexOf(quotaCompYearState)===-1)quotaCompYearState=getCurrentBuddhistYear();
-  var tabsHTML=years.map(function(y){return "<button class='subtab"+(y===quotaCompYearState?" active":"")+"' onclick=\"selectQuotaCompYear("+y+")\">ปี "+y+"</button>";}).join("");
+  var tabsHTML=years.map(function(y){return "<span style='display:inline-flex;align-items:center;gap:2px'><button class='subtab"+(y===quotaCompYearState?" active":"")+"' onclick=\"selectQuotaCompYear("+y+")\">ปี "+y+"</button>"+(y!==2568&&y!==2569?"<button title='ลบปีนี้ (เฉพาะพนักงานคนนี้)' onclick=\"deleteEmployeeQuotaYear('comp',"+y+")\" style='width:20px;height:20px;border-radius:50%;border:none;background:#fef2f2;color:#991b1b;font-size:11px;cursor:pointer'>✕</button>":"")+"</span>";}).join("");
   var yearBlocks=years.map(function(y){
     var qv=getCompQuotaForYear(key,y);
     return "<div id='quota-comp-year-"+y+"' style='display:"+(y===quotaCompYearState?"grid":"none")+";grid-template-columns:1fr 1fr;gap:10px'><div><label style='font-size:10px;color:#999;display:block;margin-bottom:3px'>ใช้ไปแล้ว</label><input type='number' id='q-comp-used-"+y+"' value='"+qv.used+"' min='0' step='0.5' class='field-input' style='padding:6px;font-size:13px;text-align:center'></div><div><label style='font-size:10px;color:#999;display:block;margin-bottom:3px'>โควต้ารวม</label><input type='number' id='q-comp-total-"+y+"' value='"+qv.total+"' min='0' step='0.5' class='field-input' style='padding:6px;font-size:13px;text-align:center'></div></div>";
@@ -1582,7 +1598,7 @@ function selectQuotaCompYear(y){
 function renderAnnualQuotaBlock(key){
   var years=getAnnualQuotaYears(key);
   if(quotaAnnualYearState===null||years.indexOf(quotaAnnualYearState)===-1)quotaAnnualYearState=getCurrentBuddhistYear();
-  var tabsHTML=years.map(function(y){return "<button class='subtab"+(y===quotaAnnualYearState?" active":"")+"' onclick=\"selectQuotaAnnualYear("+y+")\">ปี "+y+"</button>";}).join("");
+  var tabsHTML=years.map(function(y){return "<span style='display:inline-flex;align-items:center;gap:2px'><button class='subtab"+(y===quotaAnnualYearState?" active":"")+"' onclick=\"selectQuotaAnnualYear("+y+")\">ปี "+y+"</button>"+(y!==2568&&y!==2569?"<button title='ลบปีนี้ (เฉพาะพนักงานคนนี้)' onclick=\"deleteEmployeeQuotaYear('annual',"+y+")\" style='width:20px;height:20px;border-radius:50%;border:none;background:#fef2f2;color:#991b1b;font-size:11px;cursor:pointer'>✕</button>":"")+"</span>";}).join("");
   var yearBlocks=years.map(function(y){
     var qv=getAnnualQuotaForYear(key,y);
     return "<div id='quota-annual-year-"+y+"' style='display:"+(y===quotaAnnualYearState?"block":"none")+"'><label style='display:flex;align-items:center;gap:8px;margin-bottom:10px;cursor:pointer;font-size:12.5px;font-weight:600'><input type='checkbox' id='q-annual-eligible-"+y+"'"+(qv.eligible?" checked":"")+" style='width:16px;height:16px' onchange=\"toggleAnnualEligible("+y+",this.checked)\"> มีสิทธิ์ลาพักร้อนในปีนี้</label><div id='quota-annual-inputs-"+y+"' style='display:grid;grid-template-columns:1fr 1fr;gap:10px;opacity:"+(qv.eligible?"1":"0.45")+"'><div><label style='font-size:10px;color:#999;display:block;margin-bottom:3px'>ใช้ไปแล้ว</label><input type='number' id='q-annual-used-"+y+"' value='"+qv.used+"' min='0' step='0.5' class='field-input' style='padding:6px;font-size:13px;text-align:center'"+(qv.eligible?"":" disabled")+"></div><div><label style='font-size:10px;color:#999;display:block;margin-bottom:3px'>โควต้ารวม</label><input type='number' id='q-annual-total-"+y+"' value='"+qv.total+"' min='0' step='0.5' class='field-input' style='padding:6px;font-size:13px;text-align:center'"+(qv.eligible?"":" disabled")+"></div></div></div>";
