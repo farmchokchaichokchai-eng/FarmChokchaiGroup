@@ -813,13 +813,39 @@ function annualYearFromRecord(h){if(h&&h.annualYear)return h.annualYear;var iso=
 var calState={sup:null,mgr:null,admin:null};
 var THAI_WEEKDAYS=["อา","จ","อ","พ","พฤ","ศ","ส"];
 var THAI_MONTHS_FULL=["","มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+function getApprovalScopeUserIds(prefix){
+  var ids={};
+  if(prefix==="sup"){
+    var dept=currentUser.dept;
+    getAllUsers().forEach(function(u){
+      if(!canLeave(u.role))return;
+      var a=getSupervisorAssignment(u);
+      if(a.mode==="assigned"){if(a.id===currentUser._key)ids[u._key]=true;return;}
+      if(a.mode==="skip")return;
+      if(u.dept===dept&&getRoleLevel(u.role)===1)ids[u._key]=true;
+    });
+  }else if(prefix==="mgr"){
+    var myRole=currentUser.role,myLv=getRoleLevel(myRole),dept2=currentUser.dept,isSD=myRole==="deputy"&&dept2==="special_dept";
+    getAllUsers().forEach(function(u){
+      if(!canLeave(u.role))return;
+      var tLv=getRoleLevel(u.role);
+      if(u.approverMgrId){if(u.approverMgrId===currentUser._key)ids[u._key]=true;return;}
+      if(isSD){if(tLv===4)ids[u._key]=true;return;}
+      if(myRole==="deputy"){if(tLv===4&&u.dept===dept2)ids[u._key]=true;return;}
+      if(u.dept===dept2&&tLv<myLv)ids[u._key]=true;
+    });
+    getAllUsers().forEach(function(u){if(u.approverSupId===currentUser._key)ids[u._key]=true;});
+  }
+  ids[currentUser._key]=true;
+  return ids;
+}
 function getCalendarScopeUsers(prefix){
   if(prefix==="admin"){
     var deptSel=($("admin-cal-dept")||{value:""}).value;
     return getAllUsers().filter(function(u){return canLeave(u.role)&&(!deptSel||u.dept===deptSel);});
   }
-  var dept=currentUser.dept;
-  return getAllUsers().filter(function(u){return canLeave(u.role)&&u.dept===dept;});
+  var ids=getApprovalScopeUserIds(prefix);
+  return getAllUsers().filter(function(u){return ids[u._key];});
 }
 function buildLeaveCalendarMap(scopeUsers){
   var ids={};scopeUsers.forEach(function(u){ids[u._key]=true;});
