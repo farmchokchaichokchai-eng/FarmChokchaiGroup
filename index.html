@@ -801,7 +801,8 @@ function parseThaiDate(str){
   if(y>2400)y-=543;
   return y+"-"+String(m).padStart(2,"0")+"-"+String(d).padStart(2,"0");
 }
-function isoToday(){return new Date().toISOString().slice(0,10);}
+function localISODate(d){d=d||new Date();var y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),dd=String(d.getDate()).padStart(2,"0");return y+"-"+m+"-"+dd;}
+function isoToday(){return localISODate();}
 function stamp(){var n=new Date();return n.getFullYear()+String(n.getMonth()+1).padStart(2,"0")+String(n.getDate()).padStart(2,"0");}
 function calcTenure(s){if(!s)return "";var st=new Date(s),now=new Date(),y=now.getFullYear()-st.getFullYear(),m=now.getMonth()-st.getMonth();if(m<0){y--;m+=12;}return(y>0?(y+" ปี "+(m>0?m+" เดือน":"")):(m>0?m+" เดือน":"น้อยกว่า 1 เดือน")).trim();}
 function hasOneYearTenure(startDate){if(!startDate)return true;var oneYearLater=new Date(startDate);oneYearLater.setFullYear(oneYearLater.getFullYear()+1);return new Date()>=oneYearLater;}
@@ -861,7 +862,7 @@ function buildLeaveCalendarMap(scopeUsers){
     var fISO=parseThaiDate(h.from),tISO=parseThaiDate(h.to)||fISO;
     if(!fISO)return;
     var cur=new Date(fISO+"T00:00:00"),end=new Date(tISO+"T00:00:00"),guard=0;
-    while(cur<=end&&guard<400){addDay(cur.toISOString().slice(0,10));cur.setDate(cur.getDate()+1);guard++;}
+    while(cur<=end&&guard<400){addDay(localISODate(cur));cur.setDate(cur.getDate()+1);guard++;}
   });
   return map;
 }
@@ -876,7 +877,7 @@ function renderLeaveCalendar(prefix){
   var map=buildLeaveCalendarMap(scopeUsers);
   window["__calMap_"+prefix]=map;
   var firstDay=new Date(y,m,1),startWeekday=firstDay.getDay(),daysInMonth=new Date(y,m+1,0).getDate();
-  var todayISO=new Date().toISOString().slice(0,10);
+  var todayISO=localISODate();
   var cells=[];
   for(var i=0;i<startWeekday;i++)cells.push("<div></div>");
   for(var d=1;d<=daysInMonth;d++){
@@ -988,7 +989,7 @@ function buildHolidayDropdown(year,selId,uid){
   var used=uid2?getUsedCompDates(uid2):new Map();
   var allowed=uid2?(allowedHolidaysData[uid2]||null):null;
   var unlimited=!allowed||allowed._unlimited===true;
-  var todayISO=new Date().toISOString().slice(0,10);
+  var todayISO=localISODate();
   list.forEach(function(h){var p=h.date.split("-"),opt=document.createElement("option");opt.value=h.date+"|"+h.day+"|"+h.name;var lbl=h.name+" — "+h.day+" "+parseInt(p[2])+" "+MONTHS[parseInt(p[1])]+" "+year;var isOk=unlimited||!!(allowed&&allowed[h.date]);var usedDays=used.get(h.date)||0;var gregISO=(parseInt(p[0])-543)+"-"+p[1]+"-"+p[2];var isFuture=gregISO>todayISO;if(usedDays>=1){opt.disabled=true;opt.textContent="✓ ใช้แล้ว — "+lbl;opt.style.color="#bbb";}else if(isFuture){opt.disabled=true;opt.textContent="⏳ ยังไม่ถึงวันหยุดนี้ — "+lbl;opt.style.color="#bbb";}else if(!isOk){opt.disabled=true;opt.textContent="🔒 ไม่ได้รับสิทธิ์ — "+lbl;opt.style.color="#bbb";}else opt.textContent=(usedDays>0?"🌗 ใช้ไปแล้ว 0.5 วัน (เหลือ 0.5 วัน) — ":"")+lbl;newSel.appendChild(opt);});
   oldSel.parentNode.replaceChild(newSel,oldSel);
 }
@@ -1405,7 +1406,7 @@ async function submitLeave(prefix){
   if(isComp&&compVal){
     var cpChk=compVal.split("|")[0].split("-");
     var gregISOchk=(parseInt(cpChk[0])-543)+"-"+cpChk[1]+"-"+cpChk[2];
-    if(gregISOchk>new Date().toISOString().slice(0,10)){
+    if(gregISOchk>localISODate()){
       alert("⚠️ ไม่สามารถลาชดเชยล่วงหน้าได้\n\nสามารถลาชดเชยได้เฉพาะวันหยุดนักขัตฤกษ์ที่ผ่านมาแล้วหรือวันนี้เท่านั้น");
       return;
     }
@@ -1456,7 +1457,7 @@ async function submitLeave(prefix){
   else if(prefix==="sup"){initStatus="supervisor_approved";supInfo={supervisorId:currentUser._key,supervisorName:currentUser.name,supervisorNote:"ยื่นเองในฐานะหัวหน้างาน"};}
   else if(!hasAvailableSupervisor(selfUser)){initStatus="supervisor_approved";supInfo={supervisorNote:"ข้ามขั้นตอนเห็นชอบ (ไม่มีหัวหน้างานที่รับผิดชอบ)"};}
   else{initStatus="pending";supInfo={};}
-  var rec=Object.assign({userId:currentUser._key,userRole:currentUser.role,employee:currentUser.name,dept:currentUser.dept,type:t,subtype:sub||"",label:getTypeLabelFull(t,sub),sublabel:getSubLabel(t,sub),quotaKey:t,from:fmtDate(from),to:toDate,days:days,daysUnit:timeMode?"ชั่วโมง":"วัน",note:noteText,status:initStatus,submitted:fmtDate(new Date().toISOString().slice(0,10)),createdAt:Date.now()},supInfo);
+  var rec=Object.assign({userId:currentUser._key,userRole:currentUser.role,employee:currentUser.name,dept:currentUser.dept,type:t,subtype:sub||"",label:getTypeLabelFull(t,sub),sublabel:getSubLabel(t,sub),quotaKey:t,from:fmtDate(from),to:toDate,days:days,daysUnit:timeMode?"ชั่วโมง":"วัน",note:noteText,status:initStatus,submitted:fmtDate(localISODate()),createdAt:Date.now()},supInfo);
   if(t==="annual")rec.annualYear=selectedAnnualYear;
   if(timeRange)rec.timeRange=timeRange;
   if(isComp&&compVal){var cpP=compVal.split("|");if(cpP[0])rec.compHolidayDate=cpP[0];}
