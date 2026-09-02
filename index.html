@@ -857,7 +857,7 @@ function buildLeaveCalendarMap(scopeUsers){
     var icon=t?t.icon:"📌";
     function addDay(iso){if(!iso)return;(map[iso]=map[iso]||[]).push({name:h.employee,label:h.label,icon:icon});}
     if(h.type==="dayoff"){addDay(parseThaiDate(h.to));return;}
-    if(h.type==="comp"){addDay(h.compHolidayDate||parseThaiDate(h.from));return;}
+    if(h.type==="comp"){addDay(parseThaiDate(h.from)||h.compHolidayDate);return;}
     var fISO=parseThaiDate(h.from),tISO=parseThaiDate(h.to)||fISO;
     if(!fISO)return;
     var cur=new Date(fISO+"T00:00:00"),end=new Date(tISO+"T00:00:00"),guard=0;
