@@ -1323,10 +1323,10 @@ function renderSupApprove(){
   if(!currentUser||currentUser.role!=="supervisor")return;
   var dept=currentUser.dept;
   var all=getHistory().filter(function(h){
-    if(getRoleLevel(h.userRole||"employee")!==1)return false;
     var eu=usersData[h.userId],a=getSupervisorAssignment(eu);
     if(a.mode==="assigned")return a.id===currentUser._key;
     if(a.mode==="skip")return false;
+    if(getRoleLevel(h.userRole||"employee")!==1)return false;
     return h.dept===dept;
   });
   var pendCnt=all.filter(function(h){return h.status==="pending";}).length;
