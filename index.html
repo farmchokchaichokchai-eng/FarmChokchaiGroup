@@ -1351,7 +1351,7 @@ function renderApprove(){
   var all=getHistory().filter(function(h){
     var tLv=getRoleLevel(h.userRole||"employee");
     var eu=usersData[h.userId],assignedMgr=eu&&eu.approverMgrId,assignedSup=eu&&eu.approverSupId;
-    if(assignedSup===currentUser._key&&h.status==="pending")return true;
+    if(h.status==="pending")return assignedSup===currentUser._key;
     if(assignedMgr)return assignedMgr===currentUser._key;
     if(isSD)return tLv===4;
     if(myRole==="deputy")return tLv===4&&h.dept===dept;
