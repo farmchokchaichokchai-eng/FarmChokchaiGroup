@@ -52,6 +52,7 @@ header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-inde
   [style*="font-size:13px"]{font-size:15.5px!important}
   [style*="font-size:13.5px"]{font-size:16px!important}
   [style*="font-size:14px"]{font-size:16.5px!important}
+  #sup-calendar-section .table-card,#mgr-calendar-section .table-card,#admin-calendar-section .table-card{padding:10px!important}
 }
 .table-card{background:#fff;border-radius:14px;border:1px solid #eee;overflow:hidden}
 .table-header{padding:14px 16px;border-bottom:1px solid #f3f3f3;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
@@ -886,9 +887,9 @@ function renderLeaveCalendar(prefix){
     var isToday=iso===todayISO;
     var chips=entries.slice(0,3).map(function(e){return "<div style='font-size:10px;background:#f5f5f5;border-radius:5px;padding:1px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>"+e.icon+" "+e.name+"</div>";}).join("");
     var more=entries.length>3?"<div style='font-size:9.5px;color:#999'>+"+(entries.length-3)+" เพิ่มเติม</div>":"";
-    cells.push("<div"+(entries.length?" onclick=\"openCalDayDetail('"+iso+"','"+prefix+"')\"":"")+" style='min-height:78px;border:1px solid "+(isToday?"#1a1a1a":"#f0f0f0")+";border-radius:8px;padding:5px;cursor:"+(entries.length?"pointer":"default")+";background:"+(isToday?"#fafafa":"#fff")+"'><div style='font-size:11px;font-weight:"+(isToday?"700":"500")+";color:"+(isToday?"#1a1a1a":"#999")+";margin-bottom:3px'>"+d+"</div>"+chips+more+"</div>");
+    cells.push("<div"+(entries.length?" onclick=\"openCalDayDetail('"+iso+"','"+prefix+"')\"":"")+" style='min-width:0;overflow:hidden;box-sizing:border-box;min-height:78px;border:1px solid "+(isToday?"#1a1a1a":"#f0f0f0")+";border-radius:8px;padding:4px;cursor:"+(entries.length?"pointer":"default")+";background:"+(isToday?"#fafafa":"#fff")+"'><div style='font-size:11px;font-weight:"+(isToday?"700":"500")+";color:"+(isToday?"#1a1a1a":"#999")+";margin-bottom:3px'>"+d+"</div>"+chips+more+"</div>");
   }
-  if($(prefix+"-cal-grid"))$(prefix+"-cal-grid").innerHTML="<div style='display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px'>"+THAI_WEEKDAYS.map(function(w){return "<div style='text-align:center;font-size:11px;color:#999;font-weight:600'>"+w+"</div>";}).join("")+"</div><div style='display:grid;grid-template-columns:repeat(7,1fr);gap:4px'>"+cells.join("")+"</div>";
+  if($(prefix+"-cal-grid"))$(prefix+"-cal-grid").innerHTML="<div style='display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;margin-bottom:6px'>"+THAI_WEEKDAYS.map(function(w){return "<div style='text-align:center;font-size:11px;color:#999;font-weight:600;overflow:hidden'>"+w+"</div>";}).join("")+"</div><div style='display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px'>"+cells.join("")+"</div>";
 }
 function calNav(prefix,delta){
   if(!calState[prefix]){var now=new Date();calState[prefix]={y:now.getFullYear(),m:now.getMonth()};}
