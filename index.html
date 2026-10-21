@@ -479,6 +479,7 @@ header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-inde
             <button onclick="openExportExcelModal()" style="padding:8px 12px;border-radius:8px;border:1.5px solid #d1fae5;background:#f0fdf4;color:#166534;font-size:12px;font-weight:600;cursor:pointer">⬇️ Excel</button>
             <button onclick="exportQuotaReport()" style="padding:8px 12px;border-radius:8px;border:1.5px solid #fde68a;background:#fffbeb;color:#92400e;font-size:12px;font-weight:600;cursor:pointer">📊 Export โควต้า</button>
             <button onclick="openTigerSoftModal()" style="padding:8px 12px;border-radius:8px;border:1.5px solid #ddd6fe;background:#f5f3ff;color:#5b21b6;font-size:12px;font-weight:600;cursor:pointer">🐯 TigerSoft</button>
+            <button onclick="openAuditModal()" style="padding:8px 12px;border-radius:8px;border:1.5px solid #e5e7eb;background:#f9fafb;color:#374151;font-size:12px;font-weight:600;cursor:pointer">📜 ประวัติแก้ไข</button>
             <button onclick="openTelegramSettingsModal()" style="padding:8px 12px;border-radius:8px;border:1.5px solid #bfdbfe;background:#eff6ff;color:#1e40af;font-size:12px;font-weight:600;cursor:pointer">🔔 แจ้งเตือน Telegram</button>
           </div>
         </div>
@@ -653,6 +654,17 @@ header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-inde
     <div class="modal-actions"><button class="btn-cancel" onclick="closeModal('holiday-modal')">ยกเลิก</button><button class="btn-confirm" onclick="saveHolidayEntry()">บันทึก</button></div>
   </div>
 </div>
+<div id="audit-modal" class="modal-overlay hidden">
+  <div class="modal" style="max-width:780px"><h3>📜 ประวัติการแก้ไข</h3>
+    <p style="font-size:11.5px;color:#999;margin-bottom:12px">แสดง 500 รายการล่าสุด · บันทึกเริ่มตั้งแต่เปิดใช้ฟีเจอร์นี้</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      <input class="search-input" id="audit-search" placeholder="🔍 ชื่อพนักงาน / ผู้ที่แก้ไข" oninput="renderAudit()">
+      <select id="audit-action" class="search-input" onchange="renderAudit()" style="cursor:pointer"></select>
+    </div>
+    <div id="audit-list" style="max-height:55vh;overflow-y:auto;border:1px solid #eee;border-radius:10px"></div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeModal('audit-modal')">ปิด</button><button class="btn-confirm" onclick="exportAudit()">⬇️ Export CSV</button></div>
+  </div>
+</div>
 <div id="export-excel-modal" class="modal-overlay hidden">
   <div class="modal" style="max-width:380px"><h3>⬇️ Export Excel</h3>
     <p style="font-size:11.5px;color:#999;margin-bottom:14px">เลือกช่วงวันที่ (ดูจากวันที่เริ่มลา) — เว้นว่างไว้ถ้าต้องการ export ทั้งหมด</p>
@@ -742,6 +754,15 @@ function refUsers(){return db.ref(bPath("users"));}
 function refHistory(){return db.ref(bPath("history"));}
 function refQuota(){return db.ref(bPath("quota"));}
 function refUser(k){return db.ref(bPath("users/"+k));}
+function refAudit(){return db.ref(bPath("auditLog"));}
+/* ── Audit log: บันทึกว่าใครทำอะไร เมื่อไหร่ ค่าเดิม→ค่าใหม่ ── */
+function auditLog(action,targetUserId,detail){
+  try{
+    var by=(typeof currentUser!=="undefined"&&currentUser)?currentUser:{},tu=(targetUserId&&usersData[targetUserId])?usersData[targetUserId]:null;
+    var rec=JSON.parse(JSON.stringify({at:Date.now(),action:action,byId:by._key||"",byName:by.name||"",byUsername:by.username||"",byRole:by.role||"",targetId:targetUserId||"",targetName:tu?tu.name:"",targetUsername:tu?(tu.username||""):"",detail:detail||{}}));
+    return refAudit().push(rec).catch(function(e){console.warn("audit",e);});
+  }catch(e){console.warn("audit",e);}
+}
 
 /* ── Constants ── */
 var ROLE_LEVEL={employee:1,supervisor:2,assistant_mgr:3,manager:4,deputy:5,admin:6};
@@ -1075,6 +1096,7 @@ async function deleteLeaveRequest(key){
   var h=historyData[key];
   if(!h||h.status!=="cancelled"){alert("ลบได้เฉพาะคำขอที่มีสถานะ \"ยกเลิก\" เท่านั้น");return;}
   if(!confirm("ลบคำขอลานี้ถาวร? การกระทำนี้ไม่สามารถย้อนกลับได้"))return;
+  auditLog("delete_leave",h.userId,{leaveId:key,label:h.label||"",from:h.from||"",days:Number(h.days||0),status:h.status||""});
   await refHistory().child(key).remove();
 }
 function ldOpenReject(){if(!ldCurrentItem)return;closeModal("leave-detail-modal");rejectTargetId=ldCurrentItem._key;$("reject-modal-title").textContent=ldMode==="supervisor"?"ยืนยันไม่เห็นชอบ":"ยืนยันการปฏิเสธ";$("reject-note").value="";show("reject-modal");}
@@ -1513,23 +1535,23 @@ function renderRows(filtered,mode){
 }
 async function consentItem(key){var note=prompt("บันทึกหัวหน้างาน (ถ้ามี):","");await refHistory().child(key).update({status:"supervisor_approved",supervisorId:currentUser._key,supervisorName:currentUser.name,supervisorNote:note||""});}
 function openRejectItem(key,mode){rejectTargetId=key;$("reject-modal-title").textContent=mode==="not_consent"?"ยืนยันไม่เห็นชอบ":"ยืนยันการปฏิเสธ";$("reject-note").value="";show("reject-modal");}
-async function confirmReject(){var note=($("reject-note").value||"").trim();await refHistory().child(rejectTargetId+"/status").set("rejected");if(note)await refHistory().child(rejectTargetId+"/adminNote").set(note);closeModal("reject-modal");rejectTargetId=null;}
+async function confirmReject(){var note=($("reject-note").value||"").trim();var rh=historyData[rejectTargetId]||{},rid=rejectTargetId;var wasApproved=rh.status==="approved";await refHistory().child(rid+"/status").set("rejected");if(note)await refHistory().child(rid+"/adminNote").set(note);var det={leaveId:rid,label:rh.label||"",from:rh.from||"",days:Number(rh.days||0),prevStatus:rh.status||"",note:note};if(wasApproved&&rh.daysUnit!=="ชั่วโมง"){var t=quotaTarget(rh.userId,rh.quotaKey||rh.type,rh),r=await bumpUsed(t,-Number(rh.days||0)),after=r.snapshot.val();det.refund=true;det.type=rh.quotaKey||rh.type;det.usedBefore=after+Number(rh.days||0);det.usedAfter=after;}auditLog("reject",rh.userId,det);closeModal("reject-modal");rejectTargetId=null;}
+function quotaTarget(userId,qk,h){
+  if(qk==="annual"){var y=annualYearFromRecord(h);return{year:y,path:userId+"/annual/"+y+"/used",base:(getUserQuota(userId,y).annual||{}).used||0};}
+  if(qk==="comp"){var cy=compYearFromRecord(h);return{year:cy,path:userId+"/comp/"+cy+"/used",base:(getUserQuota(userId,cy).comp||{}).used||0};}
+  return{year:null,path:userId+"/"+qk+"/used",base:(getUserQuota(userId)[qk]||{}).used||0};
+}
+function bumpUsed(t,delta){return refQuota().child(t.path).transaction(function(cur){var b=(cur===null||cur===undefined)?t.base:cur;return Math.max(0,b+delta);});}
 async function approveItem(key,userId,qk,days,unit){
-  await refHistory().child(key+"/status").set("approved");
-  if(unit==="ชั่วโมง")return;
+  var sres;
+  try{sres=await refHistory().child(key+"/status").transaction(function(cur){return cur==="approved"?undefined:"approved";});}
+  catch(e){alert("อนุมัติไม่สำเร็จ: "+e.message);return;}
+  if(!sres.committed){alert("รายการนี้ถูกอนุมัติไปแล้ว ระบบจะไม่บวกวันลาซ้ำ");return;}
   var h=historyData[key]||{};
-  if(qk==="annual"){
-    var year=annualYearFromRecord(h),q=getUserQuota(userId,year),cur=q.annual||{used:0,total:0};
-    await refQuota().child(userId+"/annual/"+year+"/used").set((cur.used||0)+Number(days));
-    return;
-  }
-  if(qk==="comp"){
-    var cyear=compYearFromRecord(h),qc=getUserQuota(userId,cyear),curc=qc.comp||{used:0,total:0};
-    await refQuota().child(userId+"/comp/"+cyear+"/used").set((curc.used||0)+Number(days));
-    return;
-  }
-  var q2=getUserQuota(userId),cur2=q2[qk]||{used:0,total:0};
-  await refQuota().child(userId+"/"+qk+"/used").set((cur2.used||0)+Number(days));
+  try{await refHistory().child(key).update({approvedById:currentUser._key||"",approvedByName:currentUser.name||"",approvedAt:Date.now()});}catch(e){console.warn(e);}
+  if(unit==="ชั่วโมง"){auditLog("approve",userId,{leaveId:key,type:qk,label:h.label||"",from:h.from||"",to:h.to||"",days:Number(days),unit:"ชั่วโมง",note:"ไม่นับเข้าโควต้า"});return;}
+  var t=quotaTarget(userId,qk,h),r=await bumpUsed(t,Number(days)),after=r.snapshot.val();
+  auditLog("approve",userId,{leaveId:key,type:qk,label:h.label||"",from:h.from||"",to:h.to||"",days:Number(days),year:t.year,usedBefore:after-Number(days),usedAfter:after});
 }
 function approveItemDirect(key,userId,qk,days,unit){approveItem(key,userId,qk,days,unit);}
 function openCancelModal(key){cancelTargetId=key;var item=historyData[key];if(!item)return;$("cancel-info").textContent=item.employee+" · "+item.label+" · "+item.from;$("cancel-status").value=item.status||"pending";$("cancel-note").value=item.adminNote||"";$("cancel-days").value=item.days||1;$("cancel-from").value=parseThaiDate(item.from);$("cancel-to").value=parseThaiDate(item.to)||parseThaiDate(item.from);show("cancel-modal");}
@@ -1571,7 +1593,7 @@ async function confirmCancel(){
       if(wasCounted||willBeCounted)await refQuota().child(item.userId+"/"+qk+"/used").set(usedNow);
     }
   }
-  var upd={status:ns,days:newDays,from:newFrom,to:newTo};if(note)upd.adminNote=note;
+  var upd={status:ns,days:newDays,from:newFrom,to:newTo,lastEditById:currentUser._key||"",lastEditByName:currentUser.name||"",lastEditAt:Date.now()};if(note)upd.adminNote=note;auditLog("edit_leave",item.userId,{leaveId:cancelTargetId,label:item.label||"",type:qk,oldStatus:oldStatus,newStatus:ns,oldDays:Number(oldDays),newDays:Number(newDays),oldFrom:item.from||"",newFrom:newFrom,oldTo:item.to||"",newTo:newTo,note:note});
   await refHistory().child(cancelTargetId).update(upd);closeModal("cancel-modal");cancelTargetId=null;
 }
 
@@ -1591,9 +1613,9 @@ function renderEmpTable(){
 }
 function openEmpModal(key){empEditId=key;$("em-err").classList.add("hidden");if(key){var u=usersData[key];if(!u)return;$("emp-modal-title").textContent="แก้ไขข้อมูลพนักงาน";$("em-name").value=u.name||"";$("em-username").value=u.username||"";$("em-password").value=u.password||"";$("em-position").value=u.position||"";$("em-startdate").value=u.startDate||"";$("em-dept").value=u.dept||"steak";$("em-role").value=u.role||"employee";$("em-custom-label").value=u.customRoleLabel||"";$("em-company").value=u.company||"";$("em-telegram").value=u.telegramChatId||"";}else{$("emp-modal-title").textContent="เพิ่มพนักงานใหม่";["em-name","em-username","em-password","em-position","em-startdate","em-custom-label","em-telegram"].forEach(function(id){$(id).value="";});$("em-dept").value="steak";$("em-role").value="employee";$("em-company").value="";}show("emp-modal");}
 async function saveEmployee(){var name=($("em-name").value||"").trim(),username=($("em-username").value||"").trim(),password=($("em-password").value||"").trim(),position=($("em-position").value||"").trim(),startDate=$("em-startdate").value||"",dept=$("em-dept").value||"steak",role=$("em-role").value||"employee",customRoleLabel=($("em-custom-label").value||"").trim(),company=$("em-company").value||"",telegramChatId=($("em-telegram").value||"").trim();if(!name||!username||!password){$("em-err-text").textContent="กรุณากรอกชื่อ Username และรหัสผ่าน";show("em-err");return;}var snap=await refUsers().once("value"),all=snap.val()||{};if(Object.entries(all).filter(function(e){return e[1].username===username&&e[0]!==empEditId;}).length){$("em-err-text").textContent="Username นี้ถูกใช้แล้ว";show("em-err");return;}var data={name:name,username:username,password:password,position:position,startDate:startDate,dept:role==="admin"?null:dept,role:role,avatar:name[0],color:ROLE_COLOR[role]||"#1a1a1a",customRoleLabel:customRoleLabel,company:company,telegramChatId:telegramChatId};if(empEditId){await refUser(empEditId).update(data);}else{var nk=refUsers().push().key;await refUser(nk).set(data);if(canLeave(role)){var initQuota=JSON.parse(JSON.stringify(DEFAULT_QUOTA));var cy0=getCurrentBuddhistYear();initQuota.annual={};initQuota.annual[cy0]={used:0,total:getAnnualQuotaTotal(startDate)};initQuota.comp={};initQuota.comp[cy0]={used:0,total:DEFAULT_QUOTA.comp.total};await refQuota().child(nk).set(initQuota);}}closeModal("emp-modal");}
-function changeRole(key,newRole){refUser(key).update({role:newRole,color:ROLE_COLOR[newRole]||"#1a1a1a"});}
+function changeRole(key,newRole){auditLog("change_role",key,{from:(usersData[key]||{}).role||"",to:newRole});refUser(key).update({role:newRole,color:ROLE_COLOR[newRole]||"#1a1a1a"});}
 function openDelModal(key,name){delTargetId=key;$("del-emp-name").textContent=name;show("del-modal");}
-async function confirmDelete(){if(!delTargetId)return;await refUser(delTargetId).remove();closeModal("del-modal");delTargetId=null;}
+async function confirmDelete(){if(!delTargetId)return;auditLog("delete_employee",delTargetId,{name:(usersData[delTargetId]||{}).name||"",role:(usersData[delTargetId]||{}).role||""});await refUser(delTargetId).remove();closeModal("del-modal");delTargetId=null;}
 
 /* ── Quota ── */
 function switchQuotaTab(tab){
@@ -1607,6 +1629,7 @@ function openQuotaModal(key){quotaEditId=key;var u=usersData[key];if(!u)return;s
 async function deleteEmployeeQuotaYear(type,year){
   if(!quotaEditId)return;
   if(!confirm("ลบข้อมูลปี "+year+" ("+(type==="annual"?"ลาพักร้อน":"ลาชดเชย")+") ของพนักงานคนนี้?"))return;
+  auditLog("delete_quota_year",quotaEditId,{type:type,year:year,before:JSON.stringify((quotaData[quotaEditId]&&quotaData[quotaEditId][type]&&quotaData[quotaEditId][type][year])||null)});
   await refQuota().child(quotaEditId+"/"+type+"/"+year).remove();
   if(type==="annual"){quotaAnnualYearState=null;renderAnnualQuotaBlock(quotaEditId);}
   else{quotaCompYearState=null;renderCompQuotaBlock(quotaEditId);}
@@ -1696,9 +1719,18 @@ async function saveQuota(){
   var compYears=getCompQuotaYears(quotaEditId),compQuotaObj={};
   compYears.forEach(function(y){var uInp=$("q-comp-used-"+y),tInp=$("q-comp-total-"+y);compQuotaObj[y]={used:uInp?(parseFloat(uInp.value)||0):0,total:tInp?(parseFloat(tInp.value)||0):0};});
   upd.comp=compQuotaObj;
+  var qChanges=[];
+  function qcmp(item,o,n){o=o||{};["used","total","eligible"].forEach(function(f){if(n[f]===undefined)return;var ov=o[f];if(ov===undefined||ov===null)ov=null;if(String(ov)!==String(n[f]))qChanges.push({item:item,field:f,from:ov,to:n[f]});});}
+  var oq=getUserQuota(quotaEditId);
+  TYPES.forEach(function(t){if(t.id==="annual"||t.id==="comp")return;qcmp(t.label,oq[t.id],upd[t.id]);});
+  Object.keys(annualObj).forEach(function(y){qcmp("ลาพักร้อน ปี "+y,getAnnualQuotaForYear(quotaEditId,Number(y)),annualObj[y]);});
+  Object.keys(compQuotaObj).forEach(function(y){qcmp("ลาชดเชย ปี "+y,getCompQuotaForYear(quotaEditId,Number(y)),compQuotaObj[y]);});
   await refQuota().child(quotaEditId).set(upd);
+  if(qChanges.length)auditLog("edit_quota",quotaEditId,{changes:qChanges});
   var unlimited=$("comp-unlimited").checked,compData={_unlimited:unlimited};
   if(!unlimited){document.querySelectorAll(".comp-holiday-cb").forEach(function(cb){if(cb.checked)compData[cb.dataset.date]=true;});}
+  var oldAH=allowedHolidaysData[quotaEditId]||null;
+  if(JSON.stringify(oldAH||{})!==JSON.stringify(compData))auditLog("comp_holiday",quotaEditId,{before:oldAH?(oldAH._unlimited?"ไม่จำกัด":Object.keys(oldAH).filter(function(k){return k!=="_unlimited";}).join(", ")):"ไม่มี",after:compData._unlimited?"ไม่จำกัด":Object.keys(compData).filter(function(k){return k!=="_unlimited";}).join(", ")});
   await db.ref(bPath("allowedHolidays")).child(quotaEditId).set(compData);
   closeModal("quota-modal");
 }
@@ -1848,7 +1880,7 @@ function addHolidayYear(){
 }
 
 /* ── Sync quota ── */
-async function syncQuotaDefaults(){if(!confirm("อัปเดตโควต้าวันลาให้พนักงานทุกคนตามเงื่อนไขใหม่?\n(รวมกฎ: พนักงานอายุงานไม่ถึง 1 ปี จะได้โควต้าลาพักร้อน = 0 โดยอัตโนมัติ)"))return;var uSnap=await refUsers().once("value"),uAll=uSnap.val()||{},qSnap=await refQuota().once("value"),qAll=qSnap.val()||{},upd={};var cyS=getCurrentBuddhistYear();Object.entries(uAll).forEach(function(e){var k=e[0],u=e[1];if(!canLeave(u.role))return;var cur=qAll[k]||{},merged={};Object.keys(DEFAULT_QUOTA).forEach(function(type){var def=DEFAULT_QUOTA[type],saved=cur[type]||{};if(type==="annual"){var existingAnnual={};if(saved.used!==undefined||saved.total!==undefined){existingAnnual[cyS]={used:saved.used||0,total:saved.total,eligible:saved.eligible!==undefined?!!saved.eligible:undefined};}else{existingAnnual=Object.assign({},saved);}var prevY=existingAnnual[cyS]||{};existingAnnual[cyS]={used:prevY.used||0,total:getAnnualQuotaTotal(u.startDate),eligible:prevY.eligible!==undefined?prevY.eligible:hasOneYearTenure(u.startDate)};merged.annual=existingAnnual;return;}if(type==="comp"){var existingComp={};if(saved.used!==undefined||saved.total!==undefined){existingComp[cyS]={used:saved.used||0,total:saved.total};}else{existingComp=Object.assign({},saved);}var prevC=existingComp[cyS]||{};existingComp[cyS]={used:prevC.used||0,total:(prevC.total&&prevC.total>=def.total)?prevC.total:def.total};merged.comp=existingComp;return;}merged[type]={used:saved.used||0,total:(saved.total&&saved.total>=def.total)?saved.total:def.total};});upd[k]=merged;});if(Object.keys(upd).length){await refQuota().update(upd);alert("✅ อัปเดตโควต้าเรียบร้อย "+Object.keys(upd).length+" คน");}}
+async function syncQuotaDefaults(){if(!confirm("อัปเดตโควต้าวันลาให้พนักงานทุกคนตามเงื่อนไขใหม่?\n(รวมกฎ: พนักงานอายุงานไม่ถึง 1 ปี จะได้โควต้าลาพักร้อน = 0 โดยอัตโนมัติ)"))return;var uSnap=await refUsers().once("value"),uAll=uSnap.val()||{},qSnap=await refQuota().once("value"),qAll=qSnap.val()||{},upd={};var cyS=getCurrentBuddhistYear();Object.entries(uAll).forEach(function(e){var k=e[0],u=e[1];if(!canLeave(u.role))return;var cur=qAll[k]||{},merged={};Object.keys(DEFAULT_QUOTA).forEach(function(type){var def=DEFAULT_QUOTA[type],saved=cur[type]||{};if(type==="annual"){var existingAnnual={};if(saved.used!==undefined||saved.total!==undefined){existingAnnual[cyS]={used:saved.used||0,total:saved.total,eligible:saved.eligible!==undefined?!!saved.eligible:undefined};}else{existingAnnual=Object.assign({},saved);}var prevY=existingAnnual[cyS]||{};existingAnnual[cyS]={used:prevY.used||0,total:getAnnualQuotaTotal(u.startDate),eligible:prevY.eligible!==undefined?prevY.eligible:hasOneYearTenure(u.startDate)};merged.annual=existingAnnual;return;}if(type==="comp"){var existingComp={};if(saved.used!==undefined||saved.total!==undefined){existingComp[cyS]={used:saved.used||0,total:saved.total};}else{existingComp=Object.assign({},saved);}var prevC=existingComp[cyS]||{};existingComp[cyS]={used:prevC.used||0,total:(prevC.total&&prevC.total>=def.total)?prevC.total:def.total};merged.comp=existingComp;return;}merged[type]={used:saved.used||0,total:(saved.total&&saved.total>=def.total)?saved.total:def.total};});upd[k]=merged;});if(Object.keys(upd).length){await refQuota().update(upd);auditLog("sync_quota_defaults","",{count:Object.keys(upd).length});alert("✅ อัปเดตโควต้าเรียบร้อย "+Object.keys(upd).length+" คน");}}
 
 /* ── Copy employees ── */
 async function openCopyEmpModal(){$("copy-search").value="";$("copy-result").classList.add("hidden");$("copy-from-branch").value=currentBranch==="farm"?"ho":"farm";$("copy-to-branch").value=currentBranch;await loadCopySourceEmps();show("copy-emp-modal");}
@@ -1945,6 +1977,46 @@ function confirmExportTigerSoft(){var filtered=filterTigerSoft();if(!filtered.le
     return (add?before+add>total:before>=total)?0:1;
   }
   function getLType(h){if(h.timeRange)return 2;if(h.note&&h.note.includes("ครึ่งวันเช้า"))return 3;if(h.note&&h.note.includes("ครึ่งวันบ่าย"))return 4;return 1;}function parseTR(tr){if(!tr)return{s:"00:00",e:"00:00",total:"00:00"};var pts=tr.split("—");if(pts.length<2)return{s:"00:00",e:"00:00",total:"00:00"};var s=pts[0].trim(),e=pts[1].trim();function toM(t){var p=t.split(":");return parseInt(p[0])*60+(parseInt(p[1])||0);}var diff=toM(e)-toM(s);if(diff<0)diff=0;var hh=Math.floor(diff/60),mm=diff%60;return{s:s,e:e,total:String(hh).padStart(2,"0")+":"+String(mm).padStart(2,"0")};}var today=new Date(),ds=today.getFullYear()+"-"+String(today.getMonth()+1).padStart(2,"0")+"-"+String(today.getDate()).padStart(2,"0");var headers=["PersonCode","document_No","ID_Leave","Data_Save","Leave_Memo","Leave_type","Leave_DateS","Leave_DateE","Leave_DateTotal","Leave_TimeS","Leave_TimeE","Leave_TimeTotal","Type_Money","Leave_SubType"];var rows=filtered.map(function(h){var eu=usersData[h.userId],pc=eu&&eu.username?eu.username:h.userId,lt=getLType(h),isDayoffRow=h.type==="dayoff",dateS=isDayoffRow?thISO(h.to):thISO(h.from),dateE=isDayoffRow?thISO(h.to):(thISO(h.to)||dateS),tr=parseTR(h.timeRange),ts=lt===2?tr.s:"00:00",te=lt===2?tr.e:"00:00",tt=lt===2?tr.total:"00:00";return[pc,"",ID_MAP[h.subtype||h.type]||3,ds,h.note||"",lt,dateS,dateE,h.days,ts,te,tt,getMoneyFlag(h),h.subtype||""];});var co=$("ts-company").value||"ALL",ty=$("ts-type").value||"ALL";dlFile("\uFEFF"+[headers].concat(rows).map(function(r){return r.map(function(c){return "\""+String(c).replace(/"/g,"\"\"")+"\"";}).join(",");}).join("\r\n"),"text/csv","TigerSoft_"+currentBranch.toUpperCase()+"_"+co+"_"+ty+"_"+stamp()+".csv");closeModal("tigersoft-modal");}
+
+/* ── Audit log viewer ── */
+var AUDIT_LABEL={approve:"อนุมัติลา",reject:"ไม่อนุมัติ",edit_leave:"แก้ไขรายการลา",delete_leave:"ลบรายการลา",edit_quota:"แก้ไขโควต้า",delete_quota_year:"ลบโควต้ารายปี",comp_holiday:"แก้สิทธิ์วันหยุดชดเชย",change_role:"เปลี่ยน Role",delete_employee:"ลบพนักงาน",sync_quota_defaults:"อัปเดตโควต้าทั้งหมด"};
+var AUDIT_FIELD={used:"ใช้ไปแล้ว",total:"โควต้ารวม",eligible:"มีสิทธิ์"};
+var auditRows=[];
+function auditEsc(x){return String(x==null?"":x).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function auditDetailText(r){
+  var d=r.detail||{},a=r.action;
+  if(a==="approve")return (d.label||d.type||"")+" "+(d.from||"")+(d.to&&d.to!==d.from?" – "+d.to:"")+" · "+d.days+" "+(d.unit||"วัน")+(d.usedAfter!==undefined?" · ใช้ไปแล้ว "+d.usedBefore+" → "+d.usedAfter+(d.year?" (ปี "+d.year+")":""):(d.note?" · "+d.note:""));
+  if(a==="reject")return (d.label||"")+" "+(d.from||"")+" · "+d.days+" วัน · จากสถานะ "+(d.prevStatus||"-")+(d.refund?" · คืนโควต้า "+d.usedBefore+" → "+d.usedAfter:"")+(d.note?" · เหตุผล: "+d.note:"");
+  if(a==="edit_leave"){var p=[];if(d.oldStatus!==d.newStatus)p.push("สถานะ "+d.oldStatus+" → "+d.newStatus);if(Number(d.oldDays)!==Number(d.newDays))p.push("จำนวนวัน "+d.oldDays+" → "+d.newDays);if(d.oldFrom!==d.newFrom||d.oldTo!==d.newTo)p.push("วันที่ "+d.oldFrom+"–"+d.oldTo+" → "+d.newFrom+"–"+d.newTo);return (d.label||"")+" · "+(p.join(" · ")||"บันทึกโดยไม่เปลี่ยนค่า")+(d.note?" · หมายเหตุ: "+d.note:"");}
+  if(a==="delete_leave")return (d.label||"")+" "+(d.from||"")+" · "+d.days+" วัน · สถานะเดิม "+(d.status||"-");
+  if(a==="edit_quota")return (d.changes||[]).map(function(c){return c.item+" "+(AUDIT_FIELD[c.field]||c.field)+": "+(c.from===null?"(ไม่มี)":c.from)+" → "+c.to;}).join(" · ");
+  if(a==="delete_quota_year")return (d.type==="annual"?"ลาพักร้อน":"ลาชดเชย")+" ปี "+d.year+" · ค่าเดิม "+(d.before||"-");
+  if(a==="comp_holiday")return "ก่อน: "+(d.before||"-")+" → หลัง: "+(d.after||"-");
+  if(a==="change_role")return (ROLE_LABEL[d.from]||d.from)+" → "+(ROLE_LABEL[d.to]||d.to);
+  if(a==="delete_employee")return (d.name||"")+" ("+(ROLE_LABEL[d.role]||d.role||"")+")";
+  if(a==="sync_quota_defaults")return "อัปเดต "+d.count+" คน";
+  return JSON.stringify(d);
+}
+async function openAuditModal(){
+  var sel=$("audit-action");if(sel&&!sel.options.length)sel.innerHTML="<option value=''>ทุกการกระทำ</option>"+Object.keys(AUDIT_LABEL).map(function(k){return "<option value='"+k+"'>"+AUDIT_LABEL[k]+"</option>";}).join("");
+  $("audit-search").value="";sel.value="";
+  $("audit-list").innerHTML="<div class='empty'>กำลังโหลด...</div>";show("audit-modal");
+  try{var snap=await refAudit().limitToLast(500).once("value"),v=snap.val()||{};auditRows=Object.keys(v).map(function(k){return Object.assign({_key:k},v[k]);}).sort(function(a,b){return (b.at||0)-(a.at||0);});}
+  catch(e){auditRows=[];$("audit-list").innerHTML="<div class='empty'>โหลดไม่สำเร็จ: "+auditEsc(e.message)+"</div>";return;}
+  renderAudit();
+}
+function auditFiltered(){var q=($("audit-search").value||"").trim().toLowerCase(),ac=$("audit-action").value||"";return auditRows.filter(function(r){if(ac&&r.action!==ac)return false;if(q&&((r.targetName||"")+" "+(r.targetUsername||"")+" "+(r.byName||"")+" "+(r.byUsername||"")).toLowerCase().indexOf(q)<0)return false;return true;});}
+function auditTime(r){return new Date(r.at||0).toLocaleString("th-TH",{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"});}
+function renderAudit(){
+  var rows=auditFiltered();
+  $("audit-list").innerHTML=rows.length?rows.map(function(r,i){return "<div style='padding:10px 14px;"+(i<rows.length-1?"border-bottom:1px solid #f0f0f0;":"")+"font-size:12.5px'><div style='display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:3px'><span><strong>"+auditEsc(AUDIT_LABEL[r.action]||r.action)+"</strong>"+(r.targetName?" · "+auditEsc(r.targetName):"")+"</span><span style='color:#aaa;font-size:11px'>"+auditEsc(auditTime(r))+"</span></div><div style='color:#555;line-height:1.5'>"+auditEsc(auditDetailText(r))+"</div><div style='color:#999;font-size:11px;margin-top:3px'>โดย "+auditEsc(r.byName||"-")+(r.byUsername?" ("+auditEsc(r.byUsername)+")":"")+(r.byRole?" · "+auditEsc(ROLE_LABEL[r.byRole]||r.byRole):"")+"</div></div>";}).join(""):"<div class='empty'>ยังไม่มีบันทึก</div>";
+}
+function exportAudit(){
+  var rows=auditFiltered();if(!rows.length){alert("ไม่มีรายการ");return;}
+  var headers=["เวลา","ผู้ทำ","Username ผู้ทำ","Role ผู้ทำ","การกระทำ","พนักงานที่ถูกแก้","Username พนักงาน","รายละเอียด"];
+  var data=rows.map(function(r){return [auditTime(r),r.byName||"",r.byUsername||"",ROLE_LABEL[r.byRole]||r.byRole||"",AUDIT_LABEL[r.action]||r.action,r.targetName||"",r.targetUsername||"",auditDetailText(r)];});
+  dlFile("\uFEFF"+[headers].concat(data).map(function(r){return r.map(function(c){return "\""+String(c).replace(/"/g,"\"\"")+"\"";}).join(",");}).join("\r\n"),"text/csv","LeaveOS_AuditLog_"+currentBranch.toUpperCase()+"_"+stamp()+".csv");
+}
 
 initDB();
 </script>
