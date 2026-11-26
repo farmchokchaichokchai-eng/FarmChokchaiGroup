@@ -1944,7 +1944,43 @@ function exportQuotaReport(){
   });
   dlFile("\uFEFF"+[headers].concat(rows).map(function(r){return r.map(function(c){return "\""+String(c).replace(/"/g,"\"\"")+"\"";}).join(",");}).join("\r\n"),"text/csv","LeaveOS_QuotaReport_"+currentBranch.toUpperCase()+"_"+stamp()+".csv");
 }
-function exportExcel(fromDate,toDate){var search=($("admin-search")||{value:""}).value||"";var filtered=getHistory().filter(function(h){var inTab=(adminLeaveTabState==="all"||h.status===adminLeaveTabState)&&(h.employee.includes(search)||h.label.includes(search));if(!inTab)return false;if(fromDate&&h.from<fromDate)return false;if(toDate&&h.from>toDate)return false;return true;});var sL={approved:"อนุมัติแล้ว",pending:"รออนุมัติ",supervisor_approved:"ผ่านหัวหน้างาน",rejected:"ไม่อนุมัติ",cancelled:"ยกเลิก"};var headers=["ชื่อพนักงาน","ฝ่าย","บริษัท","ประเภทการลา","รายละเอียด","วันที่เริ่มต้น","วันที่สิ้นสุด","จำนวนวัน","สถานะ","หัวหน้างาน","หมายเหตุ"];var rows=filtered.map(function(h){var eu=usersData[h.userId],comp=eu&&eu.company&&COMPANIES[eu.company]?COMPANIES[eu.company].label:"";return [h.employee,(DEPTS[h.dept]&&DEPTS[h.dept].label)||"",comp,h.label,h.sublabel||"",h.from,h.to,h.days,sL[h.status]||"",h.supervisorName||"",h.note||""];});var suffix=(fromDate||toDate)?"_"+(fromDate||"start")+"_to_"+(toDate||"end"):"";dlFile("\uFEFF"+[headers].concat(rows).map(function(r){return r.map(function(c){return "\""+String(c).replace(/"/g,"\"\"")+"\"";}).join(",");}).join("\r\n"),"text/csv","LeaveOS_"+currentBranch.toUpperCase()+suffix+"_"+stamp()+".csv");}
+function exportExcel(fromDate,toDate){
+  /* กรองให้เหมือนหน้าจอ: แท็บสถานะ + ช่องค้นหา (ชื่อ/ประเภท/ฝ่าย) + ตัวกรองบริษัท */
+  var search=($("admin-search")||{value:""}).value||"";
+  var company=($("admin-company-filter")||{value:""}).value||"";
+  /* ช่วงวันที่: ใบลาเก็บเป็นข้อความไทย (เช่น "22 พ.ย. 2569") จึงแปลงเป็น ISO ค.ศ. ก่อนเทียบ (กรองตามวันที่เริ่มลา) */
+  function startISO(h){return parseThaiDate(h.from||"");}
+  var filtered=getHistory().filter(function(h){
+    var emp=h.employee||"",lbl=h.label||"";
+    var deptLbl=(DEPTS[h.dept]&&DEPTS[h.dept].label)||"";
+    var inTab=(adminLeaveTabState==="all"||h.status===adminLeaveTabState)&&(emp.includes(search)||lbl.includes(search)||deptLbl.includes(search));
+    if(!inTab)return false;
+    if(company){var eu0=usersData[h.userId];if(!eu0||eu0.company!==company)return false;}
+    if(fromDate||toDate){
+      var iso=startISO(h);
+      if(iso){ /* อ่านวันที่ไม่ได้ → คงไว้ ไม่ตัดทิ้งเงียบๆ */
+        if(fromDate&&iso<fromDate)return false;
+        if(toDate&&iso>toDate)return false;
+      }
+    }
+    return true;
+  });
+  var sL={approved:"อนุมัติแล้ว",pending:"รออนุมัติ",supervisor_approved:"ผ่านหัวหน้างาน",rejected:"ไม่อนุมัติ",cancelled:"ยกเลิก"};
+  if(!filtered.length){
+    var tabTxt=adminLeaveTabState==="all"?"ทั้งหมด":(sL[adminLeaveTabState]||adminLeaveTabState);
+    alert("ไม่พบรายการที่ตรงเงื่อนไข\n\nแท็บสถานะ: "+tabTxt+(company?"\nบริษัท: "+company:"")+(search?"\nคำค้นหา: "+search:"")+((fromDate||toDate)?"\nช่วงวันที่เริ่มลา: "+(fromDate||"—")+" ถึง "+(toDate||"—")+" (ค.ศ.)":"")+"\n\nลองเปลี่ยนแท็บเป็น \"ทั้งหมด\" หรือล้างช่องค้นหา/ช่วงวันที่");
+    return;
+  }
+  /* กัน CSV/Excel formula injection: ข้อความที่ขึ้นต้นด้วย = + - @ จะถูกนำหน้าด้วย ' */
+  function safe(c){return(typeof c==="string"&&/^[=+\-@\t\r]/.test(c))?"'"+c:c;}
+  var headers=["ชื่อพนักงาน","ฝ่าย","บริษัท","ประเภทการลา","รายละเอียด","วันที่เริ่มต้น","วันที่สิ้นสุด","จำนวนวัน","สถานะ","หัวหน้างาน","หมายเหตุ","หน่วย"];
+  var rows=filtered.map(function(h){
+    var eu=usersData[h.userId],comp=eu&&eu.company&&COMPANIES[eu.company]?COMPANIES[eu.company].label:"";
+    return [h.employee||"",(DEPTS[h.dept]&&DEPTS[h.dept].label)||"",comp,h.label||"",h.sublabel||"",h.from||"",h.to||"",h.days,sL[h.status]||"",h.supervisorName||"",h.note||"",h.daysUnit||"วัน"].map(safe);
+  });
+  var suffix=(fromDate||toDate)?"_"+(fromDate||"start")+"_to_"+(toDate||"end"):"";
+  dlFile("\uFEFF"+[headers].concat(rows).map(function(r){return r.map(function(c){return "\""+String(c).replace(/"/g,"\"\"")+"\"";}).join(",");}).join("\r\n"),"text/csv","LeaveOS_"+currentBranch.toUpperCase()+suffix+"_"+stamp()+".csv");
+}
 
 function openTigerSoftModal(){$("ts-company").value="";$("ts-type").value="";$("ts-date-from").value="";$("ts-date-to").value="";$("ts-search").value="";updateTSPreview();show("tigersoft-modal");}
 function filterTigerSoft(){var company=$("ts-company").value||"",type=$("ts-type").value||"",dateFrom=$("ts-date-from").value||"",dateTo=$("ts-date-to").value||"",search=($("ts-search").value||"").trim();var thM={"ม.ค.":"01","ก.พ.":"02","มี.ค.":"03","เม.ย.":"04","พ.ค.":"05","มิ.ย.":"06","ก.ค.":"07","ส.ค.":"08","ก.ย.":"09","ต.ค.":"10","พ.ย.":"11","ธ.ค.":"12"};function thISO(str){if(!str)return "";var p=str.trim().split(" ");if(p.length<3)return "";var d=p[0].padStart(2,"0"),m=thM[p[1]]||"01",y=parseInt(p[2]);if(y>2400)y-=543;return y+"-"+m+"-"+d;}return getHistory().filter(function(h){if(h.status!=="approved")return false;if(company){var eu=usersData[h.userId];if(!eu||eu.company!==company)return false;}if(type){if(type==="sick_cert"){if(h.subtype!=="sick_cert")return false;}else if(type==="sick_no_cert"){if(h.subtype!=="sick_no_cert")return false;}else{if(h.type!==type)return false;}}if(dateFrom||dateTo){var iso=thISO(h.from);if(dateFrom&&iso&&iso<dateFrom)return false;if(dateTo&&iso&&iso>dateTo)return false;}if(search&&!h.employee.includes(search))return false;return true;});}
